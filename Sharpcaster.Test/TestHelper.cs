@@ -15,7 +15,7 @@ namespace Sharpcaster.Test
         {
             IChromecastLocator locator = new Discovery.MdnsChromecastLocator();
             var chromecasts = await locator.FindReceiversAsync();
-            return chromecasts.First();
+            return chromecasts.Where(cc => cc.Name.Contains("Büro")).First();
         }
 
         public async static Task<ChromecastReceiver> FindChromecast(string name, double timeoutSeconds)

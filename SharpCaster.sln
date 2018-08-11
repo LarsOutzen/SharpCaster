@@ -11,7 +11,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sharpcaster.Discovery", "Sh
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sharpcaster.Test", "Sharpcaster.Test\Sharpcaster.Test.csproj", "{C8C0A3A8-C6AC-4E1B-8D3B-E6764C45C35B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sharpcaster.Logging.ApplicationInsight", "Sharpcaster.Logging.ApplicationInsight\Sharpcaster.Logging.ApplicationInsight.csproj", "{A04073A2-8F89-4DBA-BB92-19A5CB67C572}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sharpcaster.Logging.ApplicationInsight", "Sharpcaster.Logging.ApplicationInsight\Sharpcaster.Logging.ApplicationInsight.csproj", "{A04073A2-8F89-4DBA-BB92-19A5CB67C572}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WpfCastAnalyzer", "WpfCastAnalyzer\WpfCastAnalyzer.csproj", "{89A74410-AFB9-417A-910E-BEB1C9D9734A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -39,6 +41,10 @@ Global
 		{A04073A2-8F89-4DBA-BB92-19A5CB67C572}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A04073A2-8F89-4DBA-BB92-19A5CB67C572}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A04073A2-8F89-4DBA-BB92-19A5CB67C572}.Release|Any CPU.Build.0 = Release|Any CPU
+		{89A74410-AFB9-417A-910E-BEB1C9D9734A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{89A74410-AFB9-417A-910E-BEB1C9D9734A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{89A74410-AFB9-417A-910E-BEB1C9D9734A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{89A74410-AFB9-417A-910E-BEB1C9D9734A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

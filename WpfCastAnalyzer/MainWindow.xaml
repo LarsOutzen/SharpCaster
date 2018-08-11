@@ -1,0 +1,25 @@
+﻿<Window x:Class="WpfCastAnalyzer.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:WpfCastAnalyzer"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="450" Width="800">
+    <DockPanel>
+        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+            <Slider Name = "VolumeCtrlDevice" Orientation="Vertical" Width="30" Maximum="60" IsEnabled="False"/>
+            <Slider Name = "VolumeCtrlLocal" Orientation="Vertical" Width="30" Maximum="60" ValueChanged="VolumeCtrlLocal_ValueChanged" />
+        </StackPanel>
+        <ComboBox DockPanel.Dock="Top" Name="SelectCastDevice" MinHeight="30" SelectionChanged="SelectCastDevice_SelectionChanged"  DisplayMemberPath="Name"/>
+        <TextBox DockPanel.Dock="Bottom" Name = "Status" Height="300" VerticalScrollBarVisibility="Auto"  />
+        <WrapPanel Name="StationPanel">
+            <Button Name="ClrlOG" Content="Clr Disp" Click="ClrlOG_Click"  />
+            <Button Name="RefreshDevices" Content="Reload Dev" Click="RefreshDevices_Click" />
+            <Button Name="Action1" Content="Connect" Click="Button_Click" />
+            <Button Name="GetMedia" Content="Load Media(Ö1)" Click="GetMedia_Click" />
+            <Button Name="Action2" Content="Pause" Click="Action2_Click" />
+            <Button Name="Action3" Content="Play" Click="Action3_Click" />
+        </WrapPanel>
+    </DockPanel>
+</Window>

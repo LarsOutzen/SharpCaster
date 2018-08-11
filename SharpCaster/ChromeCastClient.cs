@@ -289,20 +289,29 @@ namespace Sharpcaster
 
         public async Task<ChromecastStatus> LaunchApplicationAsync(string applicationId, bool joinExistingApplicationSession = true)
         {
-            if (joinExistingApplicationSession)
-            {
-                var status = GetChromecastStatus();
-                var runningApplication = status?.Applications?.FirstOrDefault(x => x.AppId == applicationId);
-                if (runningApplication != null)
-                {
+            var status = GetChromecastStatus();
+            var runningApplication = status?.Applications?.FirstOrDefault(x => x.AppId == applicationId);
+            if (runningApplication != null) {
+                // There is a running App.
+                if (joinExistingApplicationSession) {
+                    // Lets join it
                     await GetChannel<IConnectionChannel>().ConnectAsync(runningApplication.TransportId);
                     return await GetChannel<IReceiverChannel>().GetChromecastStatusAsync();
+                } else {
+                    // Lets make a new one.
+                    await GetChannel<IReceiverChannel>().StopApplication(runningApplication.SessionId);
+                    await ConnectChromecast(_receiver);
+                    return await GetChannel<IReceiverChannel>().LaunchApplicationAsync(applicationId);
                 }
+            } else {
+                // There is no running app, therfore we start a new one. We have also to connect the channel to the new transportId!
+                var stat = await GetChannel<IReceiverChannel>().LaunchApplicationAsync(applicationId);
+                await GetChannel<IConnectionChannel>().ConnectAsync(stat?.Applications?.FirstOrDefault(x => x.AppId == applicationId).TransportId);
+                return await GetChannel<IReceiverChannel>().GetChromecastStatusAsync();
             }
-            return await GetChannel<IReceiverChannel>().LaunchApplicationAsync(applicationId);
-        }
+    }
 
-        private IEnumerable<IChromecastChannel> GetStatusChannels()
+    private IEnumerable<IChromecastChannel> GetStatusChannels()
         {
             var statusChannelType = typeof(IStatusChannel<>);
             return Channels.Where(c => c.GetType().GetInterfaces().Any(i => i.GetTypeInfo().IsGenericType && i.GetGenericTypeDefinition() == statusChannelType));
