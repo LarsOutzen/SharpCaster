@@ -1,0 +1,4 @@
+[submodule "Submodules/Tmds.MDns"]
+	path = Submodules/Tmds.MDns
+	url = https://Saratsin@github.com/Saratsin/Tmds.MDns.git
+	branch = net_standard_2.0

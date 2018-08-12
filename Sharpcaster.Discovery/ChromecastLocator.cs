@@ -12,23 +12,25 @@ namespace Sharpcaster.Discovery
     /// <summary>
     /// Find the available chromecast receivers using mDNS protocol
     /// </summary>
-    public class MdnsChromecastLocator : IChromecastLocator
+    public class MdnsChromecastLocator : IChromecastLocator, IDisposable
     {
-        public event EventHandler<ChromecastReceiver> ChromecastReceivedFound;
-        private IList<ChromecastReceiver> DiscoveredDevices { get; set; }
-        private ServiceBrowser _serviceBrowser;
-        private SemaphoreSlim ServiceAddedSemaphoreSlim { get; } = new SemaphoreSlim(1, 1);
+		private readonly SemaphoreSlim _serviceAddedSemaphore = new SemaphoreSlim(1, 1);
+		private readonly List<ChromecastReceiver> _discoveredDevices = new List<ChromecastReceiver>();
+        private readonly ServiceBrowser _serviceBrowser;
+
         public MdnsChromecastLocator()
         {
-            DiscoveredDevices = new List<ChromecastReceiver>();
             _serviceBrowser = new ServiceBrowser();
             _serviceBrowser.ServiceAdded += OnServiceAdded;
+  
         }
+
+        public event EventHandler<ChromecastReceiver> ChromecastReceivedFound;
 
 
         private void OnServiceAdded(object sender, ServiceAnnouncementEventArgs e)
         {
-            ServiceAddedSemaphoreSlim.Wait();
+            _serviceAddedSemaphore.Wait();
             try
             {
                 var txtValues = e.Announcement.Txt
@@ -48,22 +50,24 @@ namespace Sharpcaster.Discovery
                     Port = e.Announcement.Port
                 };
                 ChromecastReceivedFound?.Invoke(this, chromecast);
-                DiscoveredDevices.Add(chromecast);
+                _discoveredDevices.Add(chromecast);
             }
             finally
             {
-                ServiceAddedSemaphoreSlim.Release();
+                _serviceAddedSemaphore.Release();
             }
         }
+
         /// <summary>
         /// Find the available chromecast receivers
         /// </summary>
-        public async Task<IEnumerable<ChromecastReceiver>> FindReceiversAsync()
+        public Task<IEnumerable<ChromecastReceiver>> FindReceiversAsync()
         {
-            CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
-            cancellationTokenSource.CancelAfter(TimeSpan.FromMilliseconds(2000));
-            return await FindReceiversAsync(cancellationTokenSource.Token);
+            var cts = new CancellationTokenSource(2000);
+
+            return FindReceiversAsync(cts.Token);
         }
+
         /// <summary>
         /// Find the available chromecast receivers
         /// </summary>
@@ -72,17 +76,34 @@ namespace Sharpcaster.Discovery
         /// <returns>a collection of chromecast receivers</returns>
         public async Task<IEnumerable<ChromecastReceiver>> FindReceiversAsync(CancellationToken cancellationToken)
         {
+            _discoveredDevices.Clear();
+
             if (_serviceBrowser.IsBrowsing)
-            {
                 _serviceBrowser.StopBrowse();
-            }
+            
             _serviceBrowser.StartBrowse("_googlecast._tcp");
+
             while (!cancellationToken.IsCancellationRequested)
-            {
-                await Task.Delay(100);
-            }
+                await Task.Delay(100).ConfigureAwait(false);
+            
             _serviceBrowser.StopBrowse();
-            return DiscoveredDevices;
+            return _discoveredDevices;
         }
+
+        #region IDisposable Support
+        private bool _disposed = false;
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (_disposed)
+                return;
+
+            _serviceBrowser.ServiceAdded -= OnServiceAdded;
+
+            _disposed = true;
+        }
+
+        public void Dispose() => Dispose(true);
+        #endregion
     }
 }
