@@ -24,8 +24,10 @@ using Sharpcaster.Logging;
 using Sharpcaster.Core.Models.Media;
 using Sharpcaster.Core.Messages.Media;
 
-namespace Sharpcaster {
-    public class ChromecastClient : IChromecastClient {
+namespace Sharpcaster
+{
+    public class ChromecastClient : IChromecastClient
+    {
         private const int RECEIVE_TIMEOUT = 30000;
 
         /// <summary>
@@ -55,7 +57,8 @@ namespace Sharpcaster {
             var messageInterfaceType = typeof(IMessage);
             foreach (var type in (from t in typeof(IConnectionChannel).GetTypeInfo().Assembly.GetTypes()
                                   where t.GetTypeInfo().IsClass && !t.GetTypeInfo().IsAbstract && messageInterfaceType.IsAssignableFrom(t) && t.GetTypeInfo().GetCustomAttribute<ReceptionMessageAttribute>() != null
-                                  select t)) {
+                                  select t))
+            {
                 serviceCollection.AddTransient(messageInterfaceType, type);
             }
             Init(serviceCollection);
@@ -80,7 +83,8 @@ namespace Sharpcaster {
             Logger.Info(MessageTypes.Keys.ToString(","));
             Channels = channels;
             Logger.Info(Channels.ToString(","));
-            foreach (var channel in channels) {
+            foreach (var channel in channels)
+            {
                 channel.Client = this;
             }
         }
@@ -106,12 +110,16 @@ namespace Sharpcaster {
 
         private void Receive()
         {
-            Task.Run(async () => {
-                try {
-                    while (true) {
+            Task.Run(async () =>
+            {
+                try
+                {
+                    while (true)
+                    {
                         //First 4 bytes contains the length of the message
                         var buffer = await _stream.ReadAsync(4);
-                        if (BitConverter.IsLittleEndian) {
+                        if (BitConverter.IsLittleEndian)
+                        {
                             Array.Reverse(buffer);
                         }
                         var length = BitConverter.ToInt32(buffer, 0);
@@ -122,25 +130,31 @@ namespace Sharpcaster {
                         Logger.Info($"RECEIVED: {castMessage.Namespace} : {payload}");
 
                         var channel = Channels.FirstOrDefault(c => c.Namespace == castMessage.Namespace);
-                        if (channel != null) {
+                        if (channel != null)
+                        {
                             var message = JsonConvert.DeserializeObject<MessageWithId>(payload);
-                            if (MessageTypes.TryGetValue(message.Type, out Type type)) {
-                                try {
+                            if (MessageTypes.TryGetValue(message.Type, out Type type))
+                            {
+                                try
+                                {
                                     var response = (IMessage)JsonConvert.DeserializeObject(payload, type);
                                     await channel.OnMessageReceivedAsync(response);
                                     TaskCompletionSourceInvoke(message, "SetResult", response);
                                 }
-                                catch (Exception ex) {
+                                catch (Exception ex)
+                                {
                                     TaskCompletionSourceInvoke(message, "SetException", ex, new Type[] { typeof(Exception) });
                                 }
                             }
-                            else {
+                            else
+                            {
                                 Debugger.Break();
                             }
                         }
                     }
                 }
-                catch (Exception) {
+                catch (Exception)
+                {
                     //await Dispose(false);
                     ReceiveTcs.SetResult(true);
                 }
@@ -149,11 +163,13 @@ namespace Sharpcaster {
 
         private void TaskCompletionSourceInvoke(MessageWithId message, string method, object parameter, Type[] types = null)
         {
-            if (message.HasRequestId && WaitingTasks.TryRemove(message.RequestId, out object tcs)) {
+            if (message.HasRequestId && WaitingTasks.TryRemove(message.RequestId, out object tcs))
+            {
                 var tcsType = tcs.GetType();
                 (types == null ? tcsType.GetMethod(method) : tcsType.GetMethod(method, types)).Invoke(tcs, new object[] { parameter });
             }
-            else {
+            else
+            {
                 //This is just to handle media status messages. Where we want to update the status of media but we are not expecting an update
                 //This duplicates all MediaStatus Changed events on registered Listeners !? -> removed.
                 //if(message.Type == "MEDIA_STATUS")
@@ -174,7 +190,8 @@ namespace Sharpcaster {
         private async Task SendAsync(CastMessage castMessage)
         {
             await SendSemaphoreSlim.WaitAsync();
-            try {
+            try
+            {
                 Logger.Info($"SENT    : {castMessage.DestinationId}: {castMessage.PayloadUtf8}");
 
                 byte[] message = castMessage.ToProto();
@@ -182,14 +199,16 @@ namespace Sharpcaster {
                 await networkStream.WriteAsync(message, 0, message.Length);
                 await networkStream.FlushAsync();
             }
-            finally {
+            finally
+            {
                 SendSemaphoreSlim.Release();
             }
         }
 
         private CastMessage CreateCastMessage(string ns, string destinationId)
         {
-            return new CastMessage() {
+            return new CastMessage()
+            {
                 Namespace = ns,
                 SourceId = "Sender-0",
                 DestinationId = destinationId
@@ -206,7 +225,8 @@ namespace Sharpcaster {
 
         public async Task DisconnectAsync()
         {
-            foreach (var channel in GetStatusChannels()) {
+            foreach (var channel in GetStatusChannels())
+            {
                 channel.GetType().GetProperty("Status").SetValue(channel, null);
             }
             await Dispose();
@@ -220,11 +240,13 @@ namespace Sharpcaster {
 
         private async Task Dispose(bool waitReceiveTask)
         {
-            if (_client != null) {
+            if (_client != null)
+            {
                 WaitingTasks.Clear();
                 Dispose(_stream, () => _stream = null);
                 Dispose(_client, () => _client = null);
-                if (waitReceiveTask && ReceiveTcs != null) {
+                if (waitReceiveTask && ReceiveTcs != null)
+                {
                     await ReceiveTcs.Task;
                 }
                 OnDisconnected();
@@ -233,14 +255,18 @@ namespace Sharpcaster {
 
         private void Dispose(IDisposable disposable, Action action)
         {
-            if (disposable != null) {
-                try {
+            if (disposable != null)
+            {
+                try
+                {
                     disposable.Dispose();
                 }
-                catch (Exception ex) {
+                catch (Exception ex)
+                {
                     Logger.InfoException("Error on disposing.", ex, null);
                 }
-                finally {
+                finally
+                {
                     action();
                 }
             }
@@ -268,23 +294,27 @@ namespace Sharpcaster {
         {
             var status = GetChromecastStatus();
             var runningApplication = status?.Applications?.FirstOrDefault(x => x.AppId == applicationId);
-            if (runningApplication != null) {
+            if (runningApplication != null)
+            {
                 // There is a running App.
-                if (joinExistingApplicationSession) {
+                if (joinExistingApplicationSession)
+                {
                     // Lets join it
                     await GetChannel<IConnectionChannel>().ConnectAsync(runningApplication.TransportId);
                     // If something is playing we want to have its media status
                     await GetChannel<MediaChannel>().GetStatusAsync();
                     return await GetChannel<IReceiverChannel>().GetChromecastStatusAsync();
                 }
-                else {
+                else
+                {
                     // Lets make a new one.
                     await GetChannel<IReceiverChannel>().StopApplication(runningApplication.SessionId);
                     await ConnectChromecast(_receiver);
                     return await CreateNewAppAsync(applicationId);
                 }
             }
-            else {
+            else
+            {
                 // There is no running app, therfore we start a new one. We have also to connect the channel to the new transportId!
                 return await CreateNewAppAsync(applicationId);
             }
