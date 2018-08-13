@@ -24,10 +24,8 @@ using Sharpcaster.Logging;
 using Sharpcaster.Core.Models.Media;
 using Sharpcaster.Core.Messages.Media;
 
-namespace Sharpcaster
-{
-    public class ChromecastClient : IChromecastClient
-    {
+namespace Sharpcaster {
+    public class ChromecastClient : IChromecastClient {
         private const int RECEIVE_TIMEOUT = 30000;
 
         /// <summary>
@@ -47,8 +45,7 @@ namespace Sharpcaster
         private IEnumerable<IChromecastChannel> Channels { get; set; }
         private ConcurrentDictionary<int, object> WaitingTasks { get; } = new ConcurrentDictionary<int, object>();
 
-        public ChromecastClient()
-        {
+        public ChromecastClient() {
             var serviceCollection = new ServiceCollection();
             serviceCollection.AddTransient<IChromecastChannel, ConnectionChannel>();
             serviceCollection.AddTransient<IChromecastChannel, HeartbeatChannel>();
@@ -57,8 +54,7 @@ namespace Sharpcaster
             var messageInterfaceType = typeof(IMessage);
             foreach (var type in (from t in typeof(IConnectionChannel).GetTypeInfo().Assembly.GetTypes()
                                   where t.GetTypeInfo().IsClass && !t.GetTypeInfo().IsAbstract && messageInterfaceType.IsAssignableFrom(t) && t.GetTypeInfo().GetCustomAttribute<ReceptionMessageAttribute>() != null
-                                  select t))
-            {
+                                  select t)) {
                 serviceCollection.AddTransient(messageInterfaceType, type);
             }
             Init(serviceCollection);
@@ -68,13 +64,11 @@ namespace Sharpcaster
         /// Initializes a new instance of Sender class
         /// </summary>
         /// <param name="serviceCollection">collection of service descriptors</param>
-        public ChromecastClient(IServiceCollection serviceCollection)
-        {
+        public ChromecastClient(IServiceCollection serviceCollection) {
             Init(serviceCollection);
         }
 
-        private void Init(IServiceCollection serviceCollection)
-        {
+        private void Init(IServiceCollection serviceCollection) {
             var serviceProvider = serviceCollection.BuildServiceProvider();
             var channels = serviceProvider.GetServices<IChromecastChannel>();
             var messages = serviceProvider.GetServices<IMessage>();
@@ -83,15 +77,13 @@ namespace Sharpcaster
             Logger.Info(MessageTypes.Keys.ToString(","));
             Channels = channels;
             Logger.Info(Channels.ToString(","));
-            foreach (var channel in channels)
-            {
+            foreach (var channel in channels) {
                 channel.Client = this;
             }
         }
 
 
-        public async Task<ChromecastStatus> ConnectChromecast(ChromecastReceiver chromecastReceiver)
-        {
+        public async Task<ChromecastStatus> ConnectChromecast(ChromecastReceiver chromecastReceiver) {
             await Dispose();
 
             _receiver = chromecastReceiver;
@@ -108,18 +100,13 @@ namespace Sharpcaster
             return await GetChannel<IReceiverChannel>().GetChromecastStatusAsync();
         }
 
-        private void Receive()
-        {
-            Task.Run(async () =>
-            {
-                try
-                {
-                    while (true)
-                    {
+        private void Receive() {
+            Task.Run(async () => {
+                try {
+                    while (true) {
                         //First 4 bytes contains the length of the message
                         var buffer = await _stream.ReadAsync(4);
-                        if (BitConverter.IsLittleEndian)
-                        {
+                        if (BitConverter.IsLittleEndian) {
                             Array.Reverse(buffer);
                         }
                         var length = BitConverter.ToInt32(buffer, 0);
@@ -130,45 +117,37 @@ namespace Sharpcaster
                         Logger.Info($"RECEIVED: {castMessage.Namespace} : {payload}");
 
                         var channel = Channels.FirstOrDefault(c => c.Namespace == castMessage.Namespace);
-                        if (channel != null)
-                        {
+                        if (channel != null) {
                             var message = JsonConvert.DeserializeObject<MessageWithId>(payload);
-                            if (MessageTypes.TryGetValue(message.Type, out Type type))
-                            {
-                                try
-                                {
+                            if (MessageTypes.TryGetValue(message.Type, out Type type)) {
+                                try {
                                     var response = (IMessage)JsonConvert.DeserializeObject(payload, type);
                                     await channel.OnMessageReceivedAsync(response);
                                     TaskCompletionSourceInvoke(message, "SetResult", response);
                                 }
-                                catch (Exception ex)
-                                {
+                                catch (Exception ex) {
                                     TaskCompletionSourceInvoke(message, "SetException", ex, new Type[] { typeof(Exception) });
                                 }
                             }
-                            else
-                            {
+                            else {
                                 Debugger.Break();
                             }
                         }
                     }
                 }
-                catch (Exception)
-                {
+                catch (Exception) {
                     //await Dispose(false);
                     ReceiveTcs.SetResult(true);
                 }
             });
         }
 
-        private void TaskCompletionSourceInvoke(MessageWithId message, string method, object parameter, Type[] types = null)
-        {
-            if (message.HasRequestId && WaitingTasks.TryRemove(message.RequestId, out object tcs))
-            {
+        private void TaskCompletionSourceInvoke(MessageWithId message, string method, object parameter, Type[] types = null) {
+            if (message.HasRequestId && WaitingTasks.TryRemove(message.RequestId, out object tcs)) {
                 var tcsType = tcs.GetType();
                 (types == null ? tcsType.GetMethod(method) : tcsType.GetMethod(method, types)).Invoke(tcs, new object[] { parameter });
-            } else
-            {
+            }
+            else {
                 //This is just to handle media status messages. Where we want to update the status of media but we are not expecting an update
                 //This duplicates all MediaStatus Changed events on registered Listeners !? -> removed.
                 //if(message.Type == "MEDIA_STATUS")
@@ -179,18 +158,15 @@ namespace Sharpcaster
             }
         }
 
-        public async Task SendAsync(string ns, IMessage message, string destinationId)
-        {
+        public async Task SendAsync(string ns, IMessage message, string destinationId) {
             var castMessage = CreateCastMessage(ns, destinationId);
             castMessage.PayloadUtf8 = JsonConvert.SerializeObject(message);
             await SendAsync(castMessage);
         }
 
-        private async Task SendAsync(CastMessage castMessage)
-        {
+        private async Task SendAsync(CastMessage castMessage) {
             await SendSemaphoreSlim.WaitAsync();
-            try
-            {
+            try {
                 Logger.Info($"SENT    : {castMessage.DestinationId}: {castMessage.PayloadUtf8}");
 
                 byte[] message = castMessage.ToProto();
@@ -198,73 +174,59 @@ namespace Sharpcaster
                 await networkStream.WriteAsync(message, 0, message.Length);
                 await networkStream.FlushAsync();
             }
-            finally
-            {
+            finally {
                 SendSemaphoreSlim.Release();
             }
         }
 
-        private CastMessage CreateCastMessage(string ns, string destinationId)
-        {
-            return new CastMessage()
-            {
+        private CastMessage CreateCastMessage(string ns, string destinationId) {
+            return new CastMessage() {
                 Namespace = ns,
                 SourceId = "Sender-0",
                 DestinationId = destinationId
             };
         }
 
-        public async Task<TResponse> SendAsync<TResponse>(string ns, IMessageWithId message, string destinationId) where TResponse : IMessageWithId
-        {
+        public async Task<TResponse> SendAsync<TResponse>(string ns, IMessageWithId message, string destinationId) where TResponse : IMessageWithId {
             var taskCompletionSource = new TaskCompletionSource<TResponse>();
             WaitingTasks[message.RequestId] = taskCompletionSource;
             await SendAsync(ns, message, destinationId);
             return await taskCompletionSource.Task.TimeoutAfter(RECEIVE_TIMEOUT);
         }
 
-        public async Task DisconnectAsync()
-        {
-            foreach (var channel in GetStatusChannels())
-            {
+        public async Task DisconnectAsync() {
+            foreach (var channel in GetStatusChannels()) {
                 channel.GetType().GetProperty("Status").SetValue(channel, null);
             }
             await Dispose();
         }
 
 
-        private async Task Dispose()
-        {
+        private async Task Dispose() {
             await Dispose(true);
         }
 
-        private async Task Dispose(bool waitReceiveTask)
-        {
-            if (_client != null)
-            {
+        private async Task Dispose(bool waitReceiveTask) {
+            if (_client != null) {
                 WaitingTasks.Clear();
                 Dispose(_stream, () => _stream = null);
                 Dispose(_client, () => _client = null);
-                if (waitReceiveTask && ReceiveTcs != null)
-                {
+                if (waitReceiveTask && ReceiveTcs != null) {
                     await ReceiveTcs.Task;
                 }
                 OnDisconnected();
             }
         }
-        
-        private void Dispose(IDisposable disposable, Action action)
-        {
-            if (disposable != null)
-            {
-                try
-                {
+
+        private void Dispose(IDisposable disposable, Action action) {
+            if (disposable != null) {
+                try {
                     disposable.Dispose();
                 }
                 catch (Exception ex) {
                     Logger.InfoException("Error on disposing.", ex, null);
                 }
-                finally
-                {
+                finally {
                     action();
                 }
             }
@@ -273,23 +235,20 @@ namespace Sharpcaster
         /// <summary>
         /// Raises the Disconnected event
         /// </summary>
-        protected virtual void OnDisconnected()
-        {
+        protected virtual void OnDisconnected() {
             Disconnected?.Invoke(this, EventArgs.Empty);
         }
-        
+
         /// <summary>
         /// Gets a channel
         /// </summary>
         /// <typeparam name="TChannel">channel type</typeparam>
         /// <returns>a channel</returns>
-        public TChannel GetChannel<TChannel>() where TChannel : IChromecastChannel
-        {
+        public TChannel GetChannel<TChannel>() where TChannel : IChromecastChannel {
             return Channels.OfType<TChannel>().FirstOrDefault();
         }
 
-        public async Task<ChromecastStatus> LaunchApplicationAsync(string applicationId, bool joinExistingApplicationSession = true)
-        {
+        public async Task<ChromecastStatus> LaunchApplicationAsync(string applicationId, bool joinExistingApplicationSession = true) {
             var status = GetChromecastStatus();
             var runningApplication = status?.Applications?.FirstOrDefault(x => x.AppId == applicationId);
             if (runningApplication != null) {
@@ -297,26 +256,30 @@ namespace Sharpcaster
                 if (joinExistingApplicationSession) {
                     // Lets join it
                     await GetChannel<IConnectionChannel>().ConnectAsync(runningApplication.TransportId);
-                    //var mc = GetChannel<IMediaChannel>();
-                    //await mc.SeekAsync(1.0);
+                    // If something is playing we want to have its media status
+                    await GetChannel<MediaChannel>().GetStatusAsync();
                     return await GetChannel<IReceiverChannel>().GetChromecastStatusAsync();
-                } else {
+                }
+                else {
                     // Lets make a new one.
                     await GetChannel<IReceiverChannel>().StopApplication(runningApplication.SessionId);
                     await ConnectChromecast(_receiver);
-                    return await GetChannel<IReceiverChannel>().LaunchApplicationAsync(applicationId);
+                    return await CreateNewAppAsync(applicationId);
                 }
-            } else {
-                // There is no running app, therfore we start a new one. We have also to connect the channel to the new transportId!
-                var stat = await GetChannel<IReceiverChannel>().LaunchApplicationAsync(applicationId);
-                await GetChannel<IConnectionChannel>().ConnectAsync(stat?.Applications?.FirstOrDefault(x => x.AppId == applicationId).TransportId);
-                return await GetChannel<IReceiverChannel>().GetChromecastStatusAsync();
-                //return await GetChannel<IReceiverChannel>().LaunchApplicationAsync(applicationId);
             }
-    }
+            else {
+                // There is no running app, therfore we start a new one. We have also to connect the channel to the new transportId!
+                return await CreateNewAppAsync(applicationId);
+            }
+        }
 
-    private IEnumerable<IChromecastChannel> GetStatusChannels()
-        {
+        private async Task<ChromecastStatus> CreateNewAppAsync(string applicationId) {
+            var stat = await GetChannel<IReceiverChannel>().LaunchApplicationAsync(applicationId);
+            await GetChannel<IConnectionChannel>().ConnectAsync(stat?.Applications?.FirstOrDefault(x => x.AppId == applicationId).TransportId);
+            return await GetChannel<IReceiverChannel>().GetChromecastStatusAsync();
+        }
+
+        private IEnumerable<IChromecastChannel> GetStatusChannels() {
             var statusChannelType = typeof(IStatusChannel<>);
             return Channels.Where(c => c.GetType().GetInterfaces().Any(i => i.GetTypeInfo().IsGenericType && i.GetGenericTypeDefinition() == statusChannelType));
         }
@@ -325,20 +288,17 @@ namespace Sharpcaster
         /// Gets the differents statuses
         /// </summary>
         /// <returns>a dictionnary of namespace/status</returns>
-        public IDictionary<string, object> GetStatuses()
-        {
+        public IDictionary<string, object> GetStatuses() {
             return GetStatusChannels().ToDictionary(c => c.Namespace, c => c.GetType().GetProperty("Status").GetValue(c));
         }
 
-        public ChromecastStatus GetChromecastStatus()
-        {
+        public ChromecastStatus GetChromecastStatus() {
             var s = GetStatuses();
             var f = s.First(x => x.Key == GetChannel<ReceiverChannel>().Namespace).Value as ChromecastStatus;
             return f;
         }
 
-        public MediaStatus GetMediaStatus()
-        {
+        public MediaStatus GetMediaStatus() {
             return GetStatuses().First(x => x.Key == GetChannel<MediaChannel>().Namespace).Value as MediaStatus;
         }
     }

@@ -85,9 +85,11 @@ namespace WpfCastAnalyzer {
                     if (!MyClients.TryGetValue(ccr.Name, out client)) {
                         client = new ChromecastClient();
                         var status = await client.ConnectChromecast(ccr);
-                        DisplayCcStatus(status);  
-                        status = await client.LaunchApplicationAsync("B3419EF5"); // This joins if app already runnning on device
                         DisplayCcStatus(status);
+
+                        status = await client.LaunchApplicationAsync("B3419EF5"); // This joins if app is already runnning on device
+                        DisplayCcStatus(status);
+
                         MyClients.Add(ccr.Name, client);
                         client.Disconnected += Client_Disconnected;
                         client.GetChannel<ReceiverChannel>().StatusChanged += ReceiverStatusChanged;
