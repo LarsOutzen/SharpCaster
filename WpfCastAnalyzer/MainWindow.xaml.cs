@@ -30,9 +30,15 @@ namespace WpfCastAnalyzer {
         private Dictionary<string, ChromecastClient> MyClients = new Dictionary<string, ChromecastClient>();
 
         public MainWindow() {
+            var logger = new ApplicationInsightLogger();
             InitializeComponent();
             var t = FindChromcasts();
-            var logger = new ApplicationInsightLogger();
+        }
+
+        private void RefreshDevices_Click(object sender, RoutedEventArgs e)
+        {
+            this.SelectCastDevice.Items.Clear();
+            var t = FindChromcasts();
         }
 
         private async Task FindChromcasts() {
@@ -41,16 +47,12 @@ namespace WpfCastAnalyzer {
             Dispatcher.Invoke(() => {
                 foreach (var cc in chromecasts) {
                     this.SelectCastDevice.Items.Add(cc);
-                    if (cc.Name.Contains("Büro")) {
+                    if (cc.Name.Contains("Büro"))
+                    {
                         this.SelectCastDevice.SelectedItem = cc;
                     }
                 }
             });
-        }
-
-        private void RefreshDevices_Click(object sender, RoutedEventArgs e) {
-            this.SelectCastDevice.Items.Clear();
-            var t = FindChromcasts();
         }
 
         private void SelectCastDevice_SelectionChanged(object sender, SelectionChangedEventArgs e) {
@@ -68,7 +70,8 @@ namespace WpfCastAnalyzer {
 
         private void VolumeCtrlLocal_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e) {
             var ccr = this.SelectCastDevice.SelectedItem as ChromecastReceiver;
-            if (MyClients.TryGetValue(ccr.Name, out ChromecastClient ccc)) {
+            if (MyClients.TryGetValue(ccr.Name, out ChromecastClient ccc))
+            {
                 ccc.GetChannel<IReceiverChannel>().SetVolume(e.NewValue / 100);
             }
         }
@@ -196,7 +199,7 @@ namespace WpfCastAnalyzer {
         }
 
 
-
+       
         private void CallAsyncWithExceptionHandling(Func<Task<MediaStatus>> asyncMethod) {
             var t = asyncMethod();
             t.GetAwaiter().OnCompleted(() => {
