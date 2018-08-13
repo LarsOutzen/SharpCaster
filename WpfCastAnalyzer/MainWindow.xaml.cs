@@ -8,6 +8,7 @@ using Sharpcaster.Logging.ApplicationInsight;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -45,7 +46,6 @@ namespace WpfCastAnalyzer {
                     }
                 }
             });
-            
         }
 
         private void RefreshDevices_Click(object sender, RoutedEventArgs e) {
@@ -62,7 +62,7 @@ namespace WpfCastAnalyzer {
                 foreach (var ei in ccr.ExtraInformation) {
                     this.Status.Text += $"   {ei.Key}: '{ei.Value}'" + Environment.NewLine;
                 }
-                this.Status.Text += ccr.Status + Environment.NewLine;
+               this.Status.Text += ccr.Status + Environment.NewLine;
             }
         }
 
@@ -85,22 +85,19 @@ namespace WpfCastAnalyzer {
                     if (!MyClients.TryGetValue(ccr.Name, out client)) {
                         client = new ChromecastClient();
                         var status = await client.ConnectChromecast(ccr);
-                        DisplayStatus(status);  
+                        DisplayCcStatus(status);  
                         status = await client.LaunchApplicationAsync("B3419EF5"); // This joins if app already runnning on device
-                        DisplayStatus(status);
+                        DisplayCcStatus(status);
                         MyClients.Add(ccr.Name, client);
                         client.Disconnected += Client_Disconnected;
                         client.GetChannel<ReceiverChannel>().StatusChanged += ReceiverStatusChanged;
                         client.GetChannel<IMediaChannel>().StatusChanged += MediaStatusChanged;
                     } else {
-                        DisplayStatus(client.GetChromecastStatus());
+                        DisplayCcStatus(client.GetChromecastStatus());
                     }
                 }
             } catch (Exception ex) {
-                Dispatcher.Invoke(() => {
-                    this.Status.Text += "------" + Environment.NewLine;
-                    this.Status.Text += ex.ToString();
-                });
+                DisplayException(ex);
             }
         }
         
@@ -109,10 +106,10 @@ namespace WpfCastAnalyzer {
         }
 
         private void GetMedia_Click(object sender, RoutedEventArgs e) {
-            var t = GetCcMedia();
+            var t = LoadMedia();
         }
 
-        private async Task GetCcMedia() {
+        private async Task LoadMedia() {
             try { 
                 ChromecastReceiver ccr = this.SelectCastDevice.SelectedItem as ChromecastReceiver;
                 ChromecastClient client;
@@ -127,12 +124,10 @@ namespace WpfCastAnalyzer {
                     DisplayMediaStatus(ms);
                 }
             } catch (Exception ex) {
-                Dispatcher.Invoke(() => {
-                    this.Status.Text += "EEEEEEE" + Environment.NewLine;
-                    this.Status.Text += ex.ToString();
-                });
+                DisplayException(ex);
             }
         }
+
 
         private void MediaStatusChanged(object sender, EventArgs e) {
             var status = (sender as MediaChannel).Status;
@@ -143,7 +138,7 @@ namespace WpfCastAnalyzer {
 
         private void ReceiverStatusChanged(object sender, EventArgs e) {
             ChromecastStatus status = (sender as ReceiverChannel)?.Status;
-            //DisplayStatus(status);
+            DisplayCcStatus(status);
             if (status.Applications == null) {
                 // This is the indication that somebody switched off the speaker device with its On/Off Button
                 (sender as ReceiverChannel).Client.DisconnectAsync();
@@ -160,11 +155,58 @@ namespace WpfCastAnalyzer {
                 MyClients.Remove(ccr?.Name);
             });
         }
+        
+        private void Action2_Click(object sender, RoutedEventArgs e) {
+            ChromecastReceiver ccr = this.SelectCastDevice.SelectedItem as ChromecastReceiver;
+            ChromecastClient client;
+            if (MyClients.TryGetValue(ccr?.Name, out client)) {
+                var mc = client.GetChannel<MediaChannel>();
+                CallAsyncWithExceptionHandling(mc.PauseAsync);
+            }
+        }
+
+        private void Action3_Click(object sender, RoutedEventArgs e) {
+            ChromecastReceiver ccr = this.SelectCastDevice.SelectedItem as ChromecastReceiver;
+            ChromecastClient client;
+            if (MyClients.TryGetValue(ccr?.Name, out client)) {
+                var mc = client.GetChannel<MediaChannel>();
+                CallAsyncWithExceptionHandling(mc.PlayAsync);
+            }
+        }
+
+        private void Action4_Click(object sender, RoutedEventArgs e) {
+            ChromecastReceiver ccr = this.SelectCastDevice.SelectedItem as ChromecastReceiver;
+            ChromecastClient client;
+            if (MyClients.TryGetValue(ccr?.Name, out client)) {
+                //var ms = client.GetMediaStatus();
+                var mc = client.GetChannel<MediaChannel>();
+                CallAsyncWithExceptionHandling(mc.GetStatusAsync);
+            }
+        }
+
+        private void Stop_Click(object sender, RoutedEventArgs e) {
+            ChromecastReceiver ccr = this.SelectCastDevice.SelectedItem as ChromecastReceiver;
+            ChromecastClient client;
+            if (MyClients.TryGetValue(ccr?.Name, out client)) {
+                var mc = client.GetChannel<MediaChannel>();
+                CallAsyncWithExceptionHandling(mc.StopAsync);
+            }
+        }
 
 
-        private void DisplayStatus(ChromecastStatus status) {
+
+        private void CallAsyncWithExceptionHandling(Func<Task<MediaStatus>> asyncMethod) {
+            var t = asyncMethod();
+            t.GetAwaiter().OnCompleted(() => {
+                if (t.IsFaulted) {
+                    DisplayException(t.Exception);
+                }
+            });
+        }
+
+        private void DisplayCcStatus(ChromecastStatus status) {
             Dispatcher.InvokeAsync(() => {
-                this.Status.Text += "------" + Environment.NewLine;
+                this.Status.Text += "ChromecastStatus:" + Environment.NewLine;
                 if (Status != null) {
                     this.Status.Text += $"{status.IsActiveInput}/{status.IsActiveInput}/{status.Applications?.Count()}/{status.Volume.Level}/{status.Volume.Muted}" + Environment.NewLine;
                     if (status.Applications != null) {
@@ -180,29 +222,18 @@ namespace WpfCastAnalyzer {
 
         private void DisplayMediaStatus(MediaStatus status) {
             Dispatcher.InvokeAsync(() => {
-                this.Status.Text += "++++++" + Environment.NewLine;
+                this.Status.Text += "Mediastatus:" + Environment.NewLine;
                 this.Status.Text += $"{status.CurrentItemId}/{status.CurrentTime}/{status.ExtendedStatus}/{status.Volume.Level}/{status.Volume.Muted}/{status.IdleReason}/{status.Media?.ContentUrl}/{status.MediaSessionId}/{status.PlaybackRate}/{status.PlayerState}/{status.RepeatMode}/{status.SupportedMediaCommands}" + Environment.NewLine;
             });
         }
 
-        private void Action2_Click(object sender, RoutedEventArgs e) {
-            ChromecastReceiver ccr = this.SelectCastDevice.SelectedItem as ChromecastReceiver;
-            ChromecastClient client;
-            if (MyClients.TryGetValue(ccr?.Name, out client)) {
-                var ms = client.GetMediaStatus();
-                var mc = client.GetChannel<MediaChannel>();
-                var t = mc.PauseAsync();
-            }
+        private void DisplayException(Exception ex) {
+            Dispatcher.Invoke(() => {
+                this.Status.Text += "Exception:" + Environment.NewLine;
+                this.Status.Text += ex.ToString();
+            });
         }
 
-        private void Action3_Click(object sender, RoutedEventArgs e) {
-            ChromecastReceiver ccr = this.SelectCastDevice.SelectedItem as ChromecastReceiver;
-            ChromecastClient client;
-            if (MyClients.TryGetValue(ccr?.Name, out client)) {
-                var ms = client.GetMediaStatus();
-                var mc = client.GetChannel<MediaChannel>();
-                var t = mc.PlayAsync();
-            }
-        }
+      
     }
 }

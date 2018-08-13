@@ -161,7 +161,7 @@ namespace Sharpcaster
             });
         }
 
-        private async void TaskCompletionSourceInvoke(MessageWithId message, string method, object parameter, Type[] types = null)
+        private void TaskCompletionSourceInvoke(MessageWithId message, string method, object parameter, Type[] types = null)
         {
             if (message.HasRequestId && WaitingTasks.TryRemove(message.RequestId, out object tcs))
             {
@@ -170,11 +170,12 @@ namespace Sharpcaster
             } else
             {
                 //This is just to handle media status messages. Where we want to update the status of media but we are not expecting an update
-                if(message.Type == "MEDIA_STATUS")
-                {
-                    var statusMessage = parameter as MediaStatusMessage;
-                    await GetChannel<MediaChannel>().OnMessageReceivedAsync(statusMessage);
-                }
+                //This duplicates all MediaStatus Changed events on registered Listeners !? -> removed.
+                //if(message.Type == "MEDIA_STATUS")
+                //{
+                //    var statusMessage = parameter as MediaStatusMessage;
+                //    await GetChannel<MediaChannel>().OnMessageReceivedAsync(statusMessage);
+                //}
             }
         }
 
@@ -296,6 +297,8 @@ namespace Sharpcaster
                 if (joinExistingApplicationSession) {
                     // Lets join it
                     await GetChannel<IConnectionChannel>().ConnectAsync(runningApplication.TransportId);
+                    //var mc = GetChannel<IMediaChannel>();
+                    //await mc.SeekAsync(1.0);
                     return await GetChannel<IReceiverChannel>().GetChromecastStatusAsync();
                 } else {
                     // Lets make a new one.
@@ -308,6 +311,7 @@ namespace Sharpcaster
                 var stat = await GetChannel<IReceiverChannel>().LaunchApplicationAsync(applicationId);
                 await GetChannel<IConnectionChannel>().ConnectAsync(stat?.Applications?.FirstOrDefault(x => x.AppId == applicationId).TransportId);
                 return await GetChannel<IReceiverChannel>().GetChromecastStatusAsync();
+                //return await GetChannel<IReceiverChannel>().LaunchApplicationAsync(applicationId);
             }
     }
 
@@ -328,7 +332,9 @@ namespace Sharpcaster
 
         public ChromecastStatus GetChromecastStatus()
         {
-            return GetStatuses().First(x => x.Key == GetChannel<ReceiverChannel>().Namespace).Value as ChromecastStatus;
+            var s = GetStatuses();
+            var f = s.First(x => x.Key == GetChannel<ReceiverChannel>().Namespace).Value as ChromecastStatus;
+            return f;
         }
 
         public MediaStatus GetMediaStatus()

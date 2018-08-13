@@ -12,6 +12,6 @@ namespace Sharpcaster.Core.Messages.Media
         /// Gets or sets the media session identifier
         /// </summary>
         [DataMember(Name = "mediaSessionId")]
-        public long MediaSessionId { get; set; }
+        public long? MediaSessionId { get; set; }
     }
 }

@@ -27,20 +27,29 @@ namespace Sharpcaster.Core.Channels
         {
             try
             {
-                return (await SendAsync<MediaStatusMessage>(message, application.TransportId)).Status?.FirstOrDefault();
+                var s = await SendAsync<MediaStatusMessage>(message, application.TransportId);
+                return s.Status?.FirstOrDefault();
             }
-            catch (Exception)
+            catch (Exception e)
             {
                 Status = null;
-                throw;
+                throw e;
             }
         }
 
         private async Task<MediaStatus> SendAsync(MediaSessionMessage message)
         {
             var chromecastStatus = Client.GetChromecastStatus();
-            message.MediaSessionId = Status?.First().MediaSessionId ?? throw new ArgumentNullException("MediaSessionId");
-            return await SendAsync(message, chromecastStatus.Applications[0]);
+            if ((Status?.Count()??0) > 0) {
+                var MediaStatus = Status.First();
+                if (MediaStatus.IdleReason != "CANCELLED") {
+                    message.MediaSessionId = Status?.First().MediaSessionId;
+                }
+            }
+            if ((message.MediaSessionId != null) || (message.Type.Equals("GET_STATUS"))) {
+                return await SendAsync(message, chromecastStatus.Applications[0]);
+            }
+            throw new ArgumentNullException("MediaSessionId");
         }
 
         /// <summary>
@@ -92,5 +101,14 @@ namespace Sharpcaster.Core.Channels
         {
             return await SendAsync(new SeekMessage() { CurrentTime = seconds });
         }
+
+        /// <summary>
+        /// Seeks to the specified time
+        /// </summary>
+        /// <returns>media status</returns>
+        public async Task<MediaStatus> GetStatusAsync() {
+            return await SendAsync(new GetStatusMessage());
+        }
+
     }
 }

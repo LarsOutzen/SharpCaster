@@ -18,8 +18,10 @@
             <Button Name="RefreshDevices" Content="Reload Dev" Click="RefreshDevices_Click" />
             <Button Name="Action1" Content="Connect" Click="Button_Click" />
             <Button Name="GetMedia" Content="Load Media(Ö1)" Click="GetMedia_Click" />
+            <Button Name="Action4" Content="Get Media Status" Click="Action4_Click" />
             <Button Name="Action2" Content="Pause" Click="Action2_Click" />
             <Button Name="Action3" Content="Play" Click="Action3_Click" />
+            <Button Name="Stop" Content="Stop" Click="Stop_Click" />
         </WrapPanel>
     </DockPanel>
 </Window>
