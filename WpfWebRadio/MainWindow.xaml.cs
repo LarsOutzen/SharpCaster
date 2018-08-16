@@ -36,11 +36,9 @@ namespace WpfWebRadio {
         }
 
         private void ReadStationConfig() {
-         //   int i = 0;
             foreach (string settingLine in Properties.Settings.Default.MyStations) {
                 string[] args = settingLine.Split('|');
                 Button b = new Button() {
-           //         Name = $"Button_{i++}",
                     MinWidth = 60,
                     MinHeight = 60,
                     Margin = new Thickness(8),
@@ -78,6 +76,11 @@ namespace WpfWebRadio {
                 } else {
                     var st = this.SelectedChromeCastClient?.GetChromecastStatus();
                     Status.Text = $"Switched to {ccr.Name}. Volume: {st?.Volume?.Level} ";
+                    EnableButtons(null);
+                    VolumeCtrlLocal.Value = (st?.Volume?.Level ?? 0)*100;
+                    VolumeCtrlDevice.Value = (st?.Volume?.Level ?? 0)*100;
+                    CallAsyncWithExceptionHandling(this.SelectedChromeCastClient?.GetChannel<MediaChannel>().GetStatusAsync(),
+                                                   (ex) => { DisplayException(ex); });
                 }
             }
         }
@@ -85,18 +88,29 @@ namespace WpfWebRadio {
         private async Task ConnectClient(ChromecastReceiver ccr) {
             ChromecastClient client = new ChromecastClient();
             var status = await client.ConnectChromecast(ccr);
-            status = await client.LaunchApplicationAsync(SharpcasterAppId); // This joins if app is already runnning on device
+            // Check if somebody other is using this device.
+            bool? others = status.Applications?.Exists(a => a.AppId != SharpcasterAppId);
+            if (others == true) {
+                // Force a connect !?
+            } else {
+                status = await client.LaunchApplicationAsync(SharpcasterAppId); // This joins if app is already runnning on device
 
-            MyClients.Add(ccr.Name, client);
-            client.Disconnected += Client_Disconnected;
-            client.GetChannel<ReceiverChannel>().StatusChanged += Client_ReceiverStatusChanged;
-            client.GetChannel<IMediaChannel>().StatusChanged += Client_MediaStatusChanged;
+                MyClients.Add(ccr.Name, client);
+                client.Disconnected += Client_Disconnected;
+                client.GetChannel<ReceiverChannel>().StatusChanged += Client_ReceiverStatusChanged;
+                client.GetChannel<IMediaChannel>().StatusChanged += Client_MediaStatusChanged;
 
-            Dispatcher.Invoke(() => {
-                this.SelectedChromeCastClient = client;
-                EnableButtons();
-                Status.Text = $"App: {status.Applications[0].DisplayName} on {ccr.Name} connected. Volume: {status.Volume.Level}";
-            });
+                MediaStatus ms = await client.GetChannel<MediaChannel>().GetStatusAsync();
+                string mediaUrl = ms?.Media?.ContentUrl;
+
+                Dispatcher.Invoke(() => {
+                    this.SelectedChromeCastClient = client;
+                    EnableButtons(mediaUrl);
+                    Status.Text = $"App: {status.Applications[0].DisplayName} on {ccr.Name} connected. Volume: {status?.Volume?.Level} Url:{mediaUrl}";
+                    VolumeCtrlLocal.Value = (status?.Volume?.Level ?? 0) * 100;
+                    VolumeCtrlDevice.Value = (status?.Volume?.Level ?? 0) * 100;
+                });
+            }
         }
 
         private void Client_MediaStatusChanged(object sender, EventArgs e) {
@@ -105,8 +119,14 @@ namespace WpfWebRadio {
             string receiverName = MyClients.FirstOrDefault(x => x.Value == client).Key;
 
             MediaStatus ms = client?.GetMediaStatus();
+            string medienUrl = ms?.Media?.ContentUrl;
             if (ms != null) {
-                Dispatcher.InvokeAsync(() => Status.Text = $"{receiverName}/M[{ms.MediaSessionId}]: {ms.CurrentTime}/{ms.PlayerState}/{ms.Media?.ContentUrl}/{ms.IdleReason}");
+                Dispatcher.InvokeAsync(() => {
+                    Status.Text = $"{receiverName}/M[{ms.MediaSessionId}]: {ms.CurrentTime}/{ms.PlayerState}/{ms.Media?.ContentUrl}/{ms.IdleReason}";
+                    if ((this.SelectedChromeCastClient == client) && (!string.IsNullOrEmpty(medienUrl))) {
+                        EnableButtons(medienUrl);
+                    }
+                });
             }
         }
 
@@ -121,7 +141,10 @@ namespace WpfWebRadio {
                 // This is the indication that somebody switched off the (speaker) device with its On/Off Button
                 CallAsyncWithExceptionHandling(DisconnectDeviceAsync(receiverName, rc), (ex)=>DisplayException(ex));
             }
-            Dispatcher.InvokeAsync(() => Status.Text = $"{receiverName}/C[{a?.AppId}]: {a?.DisplayName}/{status.Volume.Level}");
+            Dispatcher.InvokeAsync(() => {
+                Status.Text = $"{receiverName}/C[{a?.AppId}]: {a?.DisplayName}/{status?.Volume?.Level}";
+                VolumeCtrlDevice.Value = (status?.Volume?.Level ?? 0) * 100;
+            });
         }
 
         private void Client_Disconnected(object sender, EventArgs e) {
@@ -147,7 +170,14 @@ namespace WpfWebRadio {
 
         private void StopBtn_Click(object sender, RoutedEventArgs e) {
             CallAsyncWithExceptionHandling(SelectedChromeCastClient?.GetChannel<IMediaChannel>()?.StopAsync(), (ex) => DisplayException(ex));
+            EnableButtons(null);
         }
+
+        private void VolumeCtrlLocal_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e) {
+            CallAsyncWithExceptionHandling(SelectedChromeCastClient?.GetChannel<ReceiverChannel>()?.SetVolume(e.NewValue/100), (ex) => DisplayException(ex));
+
+        }
+
 
         private async Task LoadMedia(string meduiaUrl) {
             var media = new Media {
@@ -159,7 +189,6 @@ namespace WpfWebRadio {
             await SelectedChromeCastClient?.GetChannel<IMediaChannel>()?.LoadAsync(media);
         }
 
-
         private void DisableButtons() {
             foreach (var c in this.StationPanel.Children) {
                 Button b = c as Button;
@@ -169,11 +198,16 @@ namespace WpfWebRadio {
             }
         }
 
-        private void EnableButtons() {
+        private void EnableButtons(string mediaUrl) {
             foreach (var c in this.StationPanel.Children) {
                 Button b = c as Button;
                 if (b != null) {
                     b.IsEnabled = true;
+                    if ((string)(b.DataContext) == mediaUrl) {
+                        b.Background = Brushes.BurlyWood;
+                    } else {
+                        b.Background = Brushes.LightGray;
+                    }
                 }
             }
         }
@@ -205,5 +239,6 @@ namespace WpfWebRadio {
             //}
         }
 
+      
     }
 }
