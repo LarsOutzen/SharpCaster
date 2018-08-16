@@ -1,0 +1,19 @@
+﻿<?xml version='1.0' encoding='utf-8'?>
+<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="WpfWebRadio.Properties" GeneratedClassName="Settings">
+  <Profiles />
+  <Settings>
+    <Setting Name="MyStations" Type="System.Collections.Specialized.StringCollection" Scope="User">
+      <Value Profile="(Default)">&lt;?xml version="1.0" encoding="utf-16"?&gt;
+&lt;ArrayOfString xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"&gt;
+  &lt;string&gt;http://mp3stream3.apasf.apa.at:8000/;|Ö1|Image1&lt;/string&gt;
+  &lt;string&gt;http://mp3stream2.apasf.apa.at:80/;|Ö Regional|Image2&lt;/string&gt;
+  &lt;string&gt;http://mp3stream7.apasf.apa.at:80/;|Ö 3|Image3&lt;/string&gt;
+  &lt;string&gt;http://mp3stream1.apasf.apa.at:80/;|FM 4|Image4&lt;/string&gt;
+  &lt;string&gt;http://icecast-qmusic.cdp.triple-it.nl/Qmusic_nl_live_96.mp3|Q-Music|Image5&lt;/string&gt;
+&lt;/ArrayOfString&gt;</Value>
+    </Setting>
+    <Setting Name="DefaultCastName" Type="System.String" Scope="User">
+      <Value Profile="(Default)">Büro</Value>
+    </Setting>
+  </Settings>
+</SettingsFile>
