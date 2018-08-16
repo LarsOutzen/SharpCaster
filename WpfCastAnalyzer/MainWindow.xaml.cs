@@ -76,7 +76,7 @@ namespace WpfCastAnalyzer {
             }
         }
 
-        private void Button_Click(object sender, RoutedEventArgs e) {
+        private void Connect_Click(object sender, RoutedEventArgs e) {
             var t = Connect();   
         }
 
@@ -106,12 +106,17 @@ namespace WpfCastAnalyzer {
             }
         }
         
-        private void ClrlOG_Click(object sender, RoutedEventArgs e) {
+        private void ClrLog_Click(object sender, RoutedEventArgs e) {
             this.Status.Text = "";
         }
 
-        private void GetMedia_Click(object sender, RoutedEventArgs e) {
+        private void LoadMedia_Click(object sender, RoutedEventArgs e) {
             var t = LoadMedia();
+        }
+
+        private void LoadMedia2_Click(object sender, RoutedEventArgs e)
+        {
+            var t = LoadMedia2(this.Track.Text);
         }
 
         private async Task LoadMedia() {
@@ -122,6 +127,7 @@ namespace WpfCastAnalyzer {
                     //var mchannel = client.GetChannel<IMediaChannel>();
                     var media = new Media {
                         ContentUrl = "http://mp3stream3.apasf.apa.at:8000/;",
+                        StreamType = StreamType.Live,
                         ContentType = "audio/mp4"
                         
                     };
@@ -129,6 +135,32 @@ namespace WpfCastAnalyzer {
                     DisplayMediaStatus(ms);
                 }
             } catch (Exception ex) {
+                DisplayException(ex);
+            }
+        }
+
+        private async Task LoadMedia2(string trackNo)
+        {
+            try
+            {
+                ChromecastReceiver ccr = this.SelectCastDevice.SelectedItem as ChromecastReceiver;
+                ChromecastClient client;
+                if (MyClients.TryGetValue(ccr?.Name, out client))
+                {
+                    //var mchannel = client.GetChannel<IMediaChannel>();
+                    var media = new Media
+                    {
+                        ContentUrl = $"http://192.168.177.44:50002/m/MP3/{trackNo}.mp3",
+                        StreamType = StreamType.Buffered,
+                        ContentType = "audio/mp4"
+
+                    };
+                    var ms = await client.GetChannel<IMediaChannel>().LoadAsync(media);
+                    DisplayMediaStatus(ms);
+                }
+            }
+            catch (Exception ex)
+            {
                 DisplayException(ex);
             }
         }
@@ -161,7 +193,7 @@ namespace WpfCastAnalyzer {
             });
         }
         
-        private void Action2_Click(object sender, RoutedEventArgs e) {
+        private void Pause_Click(object sender, RoutedEventArgs e) {
             ChromecastReceiver ccr = this.SelectCastDevice.SelectedItem as ChromecastReceiver;
             ChromecastClient client;
             if (MyClients.TryGetValue(ccr?.Name, out client)) {
@@ -170,7 +202,7 @@ namespace WpfCastAnalyzer {
             }
         }
 
-        private void Action3_Click(object sender, RoutedEventArgs e) {
+        private void Play_Click(object sender, RoutedEventArgs e) {
             ChromecastReceiver ccr = this.SelectCastDevice.SelectedItem as ChromecastReceiver;
             ChromecastClient client;
             if (MyClients.TryGetValue(ccr?.Name, out client)) {
@@ -179,11 +211,10 @@ namespace WpfCastAnalyzer {
             }
         }
 
-        private void Action4_Click(object sender, RoutedEventArgs e) {
+        private void GetStatus_Click(object sender, RoutedEventArgs e) {
             ChromecastReceiver ccr = this.SelectCastDevice.SelectedItem as ChromecastReceiver;
             ChromecastClient client;
             if (MyClients.TryGetValue(ccr?.Name, out client)) {
-                //var ms = client.GetMediaStatus();
                 var mc = client.GetChannel<MediaChannel>();
                 CallAsyncWithExceptionHandling(mc.GetStatusAsync);
             }
@@ -212,7 +243,7 @@ namespace WpfCastAnalyzer {
         private void DisplayCcStatus(ChromecastStatus status) {
             Dispatcher.InvokeAsync(() => {
                 this.Status.Text += "ChromecastStatus:" + Environment.NewLine;
-                if (Status != null) {
+                if (status != null) {
                     this.Status.Text += $"{status.IsActiveInput}/{status.IsActiveInput}/{status.Applications?.Count()}/{status.Volume.Level}/{status.Volume.Muted}" + Environment.NewLine;
                     if (status.Applications != null) {
                         foreach (var a in status.Applications) {
@@ -228,7 +259,13 @@ namespace WpfCastAnalyzer {
         private void DisplayMediaStatus(MediaStatus status) {
             Dispatcher.InvokeAsync(() => {
                 this.Status.Text += "Mediastatus:" + Environment.NewLine;
-                this.Status.Text += $"{status.CurrentItemId}/{status.CurrentTime}/{status.ExtendedStatus}/{status.Volume.Level}/{status.Volume.Muted}/{status.IdleReason}/{status.Media?.ContentUrl}/{status.MediaSessionId}/{status.PlaybackRate}/{status.PlayerState}/{status.RepeatMode}/{status.SupportedMediaCommands}" + Environment.NewLine;
+                if (status != null)
+                {
+                    this.Status.Text += $"{status.CurrentItemId}/{status.CurrentTime}/{status.ExtendedStatus}/{status.Volume.Level}/{status.Volume.Muted}/{status.IdleReason}/{status.Media?.ContentUrl}/{status.MediaSessionId}/{status.PlaybackRate}/{status.PlayerState}/{status.RepeatMode}/{status.SupportedMediaCommands}" + Environment.NewLine;
+                } else
+                {
+                    this.Status.Text += $"<not available>";
+                }
             });
         }
 
@@ -239,6 +276,18 @@ namespace WpfCastAnalyzer {
             });
         }
 
-      
+        private void GetLocalStatuses_Click(object sender, RoutedEventArgs e)
+        {
+            ChromecastReceiver ccr = this.SelectCastDevice.SelectedItem as ChromecastReceiver;
+            ChromecastClient client;
+            if (MyClients.TryGetValue(ccr?.Name, out client))
+            {
+                var stat1 = client.GetChromecastStatus();
+                DisplayCcStatus(stat1);
+                var stat2 = client.GetMediaStatus();
+                DisplayMediaStatus(stat2);
+
+            }
+        }
     }
 }

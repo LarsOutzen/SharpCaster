@@ -13,15 +13,24 @@
         </StackPanel>
         <ComboBox DockPanel.Dock="Top" Name="SelectCastDevice" MinHeight="30" SelectionChanged="SelectCastDevice_SelectionChanged"  DisplayMemberPath="Name"/>
         <TextBox DockPanel.Dock="Bottom" Name = "Status" Height="300" VerticalScrollBarVisibility="Auto"  />
-        <WrapPanel Name="StationPanel">
-            <Button Name="ClrlOG" Content="Clr Disp" Click="ClrlOG_Click"  />
-            <Button Name="RefreshDevices" Content="Reload Dev" Click="RefreshDevices_Click" />
-            <Button Name="Action1" Content="Connect" Click="Button_Click" />
-            <Button Name="GetMedia" Content="Load Media(Ö1)" Click="GetMedia_Click" />
-            <Button Name="Action4" Content="Get Media Status" Click="Action4_Click" />
-            <Button Name="Action2" Content="Pause" Click="Action2_Click" />
-            <Button Name="Action3" Content="Play" Click="Action3_Click" />
-            <Button Name="Stop" Content="Stop" Click="Stop_Click" />
-        </WrapPanel>
+        <StackPanel Name="StationPanel" Orientation="Vertical">
+            <StackPanel Orientation="Horizontal">
+                <Button Name="ClrLog" Content="Clr Disp" Click="ClrLog_Click"  />
+                <Button Name="RefreshDevices" Content="Reload Dev" Click="RefreshDevices_Click" />
+            </StackPanel>
+            <StackPanel Orientation="Horizontal">
+                <Button Name="BtnConnect" Content="Connect" Click="Connect_Click" />
+                <Button Name="GetLocalStatuses" Content="Status(local)" Click="GetLocalStatuses_Click" />
+                <Button Name="BtnLoadMedia" Content="Load Media(Ö1)" Click="LoadMedia_Click" />
+                <TextBox Name="Track" Text="60" />
+                <Button Name="BtnLoadMedia2" Content="Load Media(track)" Click="LoadMedia2_Click" />
+            </StackPanel>
+            <StackPanel Orientation="Horizontal">
+                <Button Name="GetStatus" Content="Get Media Status(ask remote)" Click="GetStatus_Click" />
+                <Button Name="Pause" Content="Pause" Click="Pause_Click" />
+                <Button Name="Play" Content="Play" Click="Play_Click" />
+                <Button Name="Stop" Content="Stop" Click="Stop_Click" />
+            </StackPanel>
+        </StackPanel>
     </DockPanel>
 </Window>

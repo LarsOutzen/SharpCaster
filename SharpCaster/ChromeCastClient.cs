@@ -171,7 +171,7 @@ namespace Sharpcaster
             else
             {
                 //This is just to handle media status messages. Where we want to update the status of media but we are not expecting an update
-                //This duplicates all MediaStatus Changed events on registered Listeners !? -> removed.
+                //This duplicates all MediaStatus changed events on registered listeners !? -> temp. removed?
                 //if(message.Type == "MEDIA_STATUS")
                 //{
                 //    var statusMessage = parameter as MediaStatusMessage;
@@ -337,7 +337,7 @@ namespace Sharpcaster
         /// Gets the differents statuses
         /// </summary>
         /// <returns>a dictionnary of namespace/status</returns>
-        public IDictionary<string, object> GetStatuses()
+        private IDictionary<string, object> GetStatuses()
         {
             return GetStatusChannels().ToDictionary(c => c.Namespace, c => c.GetType().GetProperty("Status").GetValue(c));
         }
@@ -351,7 +351,10 @@ namespace Sharpcaster
 
         public MediaStatus GetMediaStatus()
         {
-            return GetStatuses().First(x => x.Key == GetChannel<MediaChannel>().Namespace).Value as MediaStatus;
+            var s = GetStatuses();
+            var f = s.First(x => x.Key == GetChannel<MediaChannel>().Namespace).Value as IEnumerable<MediaStatus>;
+            // What's the reason for more than one!? Is the first always the most recent one !?
+            return f?.FirstOrDefault();
         }
     }
 }
