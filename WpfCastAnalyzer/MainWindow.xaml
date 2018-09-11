@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:WpfCastAnalyzer"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="Chrome Caster Analizer" Height="450" Width="800">
     <DockPanel>
         <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
             <Slider Name = "VolumeCtrlDevice" Orientation="Vertical" Width="30" Maximum="60" IsEnabled="False"/>
@@ -14,25 +14,6 @@
         <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
             <ComboBox  Name="SelectCastDevice"   DisplayMemberPath="Name" Height="20" Margin="5,5,0,0" MinWidth="150"/>
             <Button x:Name="RefreshDevices" Content="Reload Dev"  Click="RefreshDevices_Click" />
-        </StackPanel>
-        <!--<TextBox DockPanel.Dock="Bottom" Name = "Status" Height="100" VerticalScrollBarVisibility="Auto"  />-->
-        <StackPanel DockPanel.Dock="Top" Name="StationPanel" Orientation="Vertical">
-            <StackPanel Orientation="Horizontal">
-                <!--<Button Name="ClrLog" Content="Clr Disp" Click="ClrLog_Click"  />-->
-                <ComboBox Name="SelectCastApp" Height="20" Margin="5,5,0,0"  />
-                <Button Name="BtnConnect" Content="Connect" Click="Connect_Click" />
-                <Button Name="BtnRefresh" Content="Refresh" Click="BtnRefresh_Click" />
-            </StackPanel>
-            <!--<StackPanel Name ="ClientPanel" Orientation="Horizontal" IsEnabled="{Binding HasClient}">
-                <Button Name="BtnLoadMedia" Content="Load Media(Ö1)" Click="LoadMedia_Click" />
-                <TextBox Name="Track" Text="60" />
-                <Button Name="BtnLoadMedia2" Content="Load Media(track)" Click="LoadMedia2_Click" />
-                <Button Name="GetStatus" Content="Get Media Status(ask remote)" Click="GetStatus_Click" />
-                <Button Name="Pause" Content="Pause" Click="Pause_Click" />
-                <Button Name="Play" Content="Play" Click="Play_Click" />
-                <Button Name="Stop" Content="Stop" Click="Stop_Click" />
-            </StackPanel>-->
-            
         </StackPanel>
         <local:ChromecastView DataContext="{Binding SelectedItem, ElementName=SelectCastDevice}" MinHeight="500"></local:ChromecastView>
     </DockPanel>

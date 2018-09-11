@@ -26,6 +26,23 @@ namespace WpfCastAnalyzer
         public ChromecastView()
         {
             InitializeComponent();
+            this.SelectCastApp.Items.Add("CC32E753");   // Spotify 
+            this.SelectCastApp.Items.Add("B3419EF5");   // Chromecaster
+            this.SelectCastApp.SelectedItem = "B3419EF5"; //"CC32E753";
+        }
+
+
+        private void Connect_Click(object sender, RoutedEventArgs e)
+        {
+            CallAsyncWithExceptionHandling(MyViewModel.Connect, this.SelectCastApp.SelectedItem.ToString());
+        }
+        private void BtnRefresh_Click(object sender, RoutedEventArgs e)
+        {
+            CallAsyncWithExceptionHandling(MyViewModel.RefreshStatus);
+        }
+        private void BtnDisConnect_Click(object sender, RoutedEventArgs e)
+        {
+            MyViewModel.Disconnect();
         }
 
         private void ClrLog_Click(object sender, RoutedEventArgs e)
@@ -86,6 +103,17 @@ namespace WpfCastAnalyzer
             });
         }
 
+        private void CallAsyncWithExceptionHandling(Func<string, Task> asyncMethod, string s)
+        {
+            var t = asyncMethod(s);
+            t.GetAwaiter().OnCompleted(() => {
+                if (t.IsFaulted)
+                {
+                    DisplayException(t.Exception, $"Error calling with '{s}'");
+                }
+            });
+        }
+
         private void CallAsyncWithExceptionHandling<T>(Func<Task<T>> asyncMethod)
         {
             var t = asyncMethod();
@@ -111,9 +139,14 @@ namespace WpfCastAnalyzer
         private void DisplayException(Exception ex, string message = "")
         {
             Dispatcher.Invoke(() => {
-                MessageBox.Show(ex.Message + Environment.NewLine + ex.InnerException?.Message, message);
+                string msg = GetExceptionMessage(ex);
+                MessageBox.Show(msg, message);
             });
         }
 
+        private string GetExceptionMessage(Exception ex)
+        {
+            return ex.Message + ( (ex.InnerException != null) ? Environment.NewLine + GetExceptionMessage(ex.InnerException) : "" );
+        }
     }
 }

@@ -114,8 +114,13 @@ namespace WpfCastAnalyzer
         #endregion
 
         #region Commands
+        public void Disconnect()
+        {
+            var t = client?.DisconnectAsync();
+        }
 
-        public async Task RefreshStatus()
+
+            public async Task RefreshStatus()
         {
             ChromecastStatus cs;
             if (client != null)
@@ -140,16 +145,20 @@ namespace WpfCastAnalyzer
                 {
                     client = new ChromecastClient();
                     var s1 = await client.ConnectChromecast(receiver);
-                    ProcessCcStatus(s1);
+                    client.Disconnected += Client_Disconnected;
+//                    ProcessCcStatus(s1);
                 }
 
                 var ccStatus = await client.LaunchApplicationAsync(appId); // This joins if app is already runnning on device
-                ProcessCcStatus(ccStatus);
 
-                ConnectedApp = appId;
-                client.Disconnected += Client_Disconnected;
                 client.GetChannel<ReceiverChannel>().StatusChanged += ReceiverStatusChanged;
                 client.GetChannel<IMediaChannel>().StatusChanged += MediaStatusChanged;
+
+                Dispatcher.CurrentDispatcher.Invoke(() =>
+                {
+                    ProcessCcStatus(ccStatus);
+                    ConnectedApp = appId;
+                });
             } 
         }
 
@@ -253,36 +262,51 @@ namespace WpfCastAnalyzer
             var ccStatus = (sender as ReceiverChannel)?.Status;
             if (ccStatus != null)
             {
+               
+                if (ccStatus.Applications != null)
+                {
+                    if (ccStatus.Applications.Where(a => a.AppId == ConnectedApp).FirstOrDefault() == null)
+                    {
+                        // Ups jetzt scheint wer anderer der Herr dieses Gerätes zu sein....
+                        (sender as ReceiverChannel).Client.DisconnectAsync();
+                    }
+                }
+                else
+                {
+                    // This is the indication that somebody switched off the speaker device with its On/Off Button
+                    (sender as ReceiverChannel).Client.DisconnectAsync();
+                }
                 Dispatcher.CurrentDispatcher.InvokeAsync(() =>
                 {
                     ProcessCcStatus(ccStatus);
-                    if (ccStatus.Applications != null)
-                    {
-                        if (ccStatus.Applications.Where(a => a.AppId == ConnectedApp).FirstOrDefault() == null)
-                        {
-                            // Ups jetzt scheint wer anderer der Herr dieses Gerätes zu sein....
-                            (sender as ReceiverChannel).Client.DisconnectAsync();
-                            ConnectedApp = "";
-                        }
-                    }
-                    else
-                    {
-                        // ??? 
-                        // This is the indication that somebody switched off the speaker device with its On/Off Button
-                        (sender as ReceiverChannel).Client.DisconnectAsync();
-                        ConnectedApp = "";
-                    }
                 });
             }
         }
 
         private void Client_Disconnected(object sender, EventArgs e)
         {
-            Dispatcher.CurrentDispatcher.InvokeAsync(() =>
+            try
+            {
+                client.Disconnected -= Client_Disconnected;
+                ReceiverChannel rc = client.GetChannel<ReceiverChannel>();
+                if (rc != null)
+                {
+                    rc.StatusChanged -= ReceiverStatusChanged;
+                }
+                IMediaChannel mc = client.GetChannel<IMediaChannel>();
+                if (mc != null)
+                {
+                    mc.StatusChanged -= MediaStatusChanged;
+                }
+            } finally
             {
                 client = null;
-                ConnectedApp = "";
-            });
+                Dispatcher.CurrentDispatcher.InvokeAsync(() =>
+                {
+                    ConnectedApp = "";
+                });
+            }
+            
         }
 
         #endregion

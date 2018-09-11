@@ -13,6 +13,7 @@
                 <TextBox Text="{Binding Path=Model}"/>
                 <TextBox Text="{Binding Path=Uri}"/>
                 <TextBox Text="{Binding Path=ReceiverStatus}"/>
+                <Label Content="ConnectedApp:"/>
                 <TextBox Text="{Binding Path=ConnectedApp}"/>
             </StackPanel>
             <StackPanel Orientation="Horizontal">
@@ -21,11 +22,18 @@
                 <TextBox Text="{Binding Path=VolumeLevel}"/>
                 <TextBox Text="{Binding Path=VolumeMuted}"/>
             </StackPanel>
-         
-            <DataGrid ItemsSource="{Binding Path=Applications, Mode=OneWay}" MinHeight="100" VerticalScrollBarVisibility="Visible"/>
+
+            <StackPanel Orientation="Horizontal"  Margin="0,10,0,5">
+                <Button Name="BtnRefresh" Content="Refresh" Click="BtnRefresh_Click" />
+                <ComboBox Name="SelectCastApp" Height="20" Margin="5,5,0,0"  />
+                <Button Name="BtnConnect" Content="Load/Conn App" Click="Connect_Click" />
+                <Button Name="BtnDisConnect" Content="Disconnect" Click="BtnDisConnect_Click" />
+            </StackPanel>
+
+            <DataGrid ItemsSource="{Binding Path=Applications, Mode=OneWay}" Height="80" VerticalScrollBarVisibility="Visible"/>
         
             <StackPanel Name ="ClientPanel" Orientation="Horizontal" IsEnabled="{Binding Path=IsAppConnected}" Margin="0,10,0,5">
-                <Button Name="ClrLog" Content="Clr Disp" Click="ClrLog_Click"  />
+                <Button Name="ClrLog" Content="Clr Disp" Click="ClrLog_Click" IsEnabled="True"  />
                 <Button Name="BtnLoadMedia" Content="Load Media(Ö1)" Click="LoadMedia_Click" />
                 <TextBox Name="Track" Text="60" />
                 <Button Name="BtnLoadMedia2" Content="Load Media(track)" Click="LoadMedia2_Click" />
