@@ -31,6 +31,10 @@ namespace WpfCastAnalyzer
             this.SelectCastApp.SelectedItem = "B3419EF5"; //"CC32E753";
         }
 
+        private void VolumeCtrlLocal_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            var t = MyViewModel.SetVolume(e.NewValue / 100);
+        }
 
         private void Connect_Click(object sender, RoutedEventArgs e)
         {

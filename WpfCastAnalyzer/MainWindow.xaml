@@ -5,16 +5,12 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:WpfCastAnalyzer"
         mc:Ignorable="d"
-        Title="Chrome Caster Analizer" Height="450" Width="800">
+        Title="Chrome Caste Analyzer" Height="450" Width="800">
     <DockPanel>
-        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
-            <Slider Name = "VolumeCtrlDevice" Orientation="Vertical" Width="30" Maximum="60" IsEnabled="False"/>
-            <Slider Name = "VolumeCtrlLocal" Orientation="Vertical" Width="30" Maximum="60" ValueChanged="VolumeCtrlLocal_ValueChanged" />
-        </StackPanel>
         <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
             <ComboBox  Name="SelectCastDevice"   DisplayMemberPath="Name" Height="20" Margin="5,5,0,0" MinWidth="150"/>
             <Button x:Name="RefreshDevices" Content="Reload Dev"  Click="RefreshDevices_Click" />
         </StackPanel>
-        <local:ChromecastView DataContext="{Binding SelectedItem, ElementName=SelectCastDevice}" MinHeight="500"></local:ChromecastView>
+        <local:ChromecastView DataContext="{Binding SelectedItem, ElementName=SelectCastDevice}" Margin="0"/>
     </DockPanel>
 </Window>

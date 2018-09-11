@@ -5,9 +5,13 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:WpfCastAnalyzer"
              mc:Ignorable="d" 
-             d:DesignHeight="450" d:DesignWidth="800">
+             d:DesignHeight="300" d:DesignWidth="800">
     <DockPanel>
-    <StackPanel Orientation="Vertical">
+        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+            <Slider Name = "VolumeCtrlDevice" Orientation="Vertical" Width="30" Maximum="60" IsEnabled="False" Value="{Binding Path=VolumeLevel}"/>
+            <Slider Name = "VolumeCtrlLocal" Orientation="Vertical" Width="30" Maximum="60" ValueChanged="VolumeCtrlLocal_ValueChanged" />
+        </StackPanel>
+        <StackPanel Orientation="Vertical">
             <StackPanel Orientation="Horizontal">
                 <TextBox Text="{Binding Path=Name}"/>
                 <TextBox Text="{Binding Path=Model}"/>
@@ -43,7 +47,7 @@
                 <Button Name="Stop" Content="Stop" Click="Stop_Click" IsEnabled="{Binding Path=IsMediaSessionAvailable}"/>
             </StackPanel>
         
-            <DataGrid ItemsSource="{Binding Path=MediaStati, Mode=OneWay}" MinHeight="100" MaxHeight="200"  VerticalScrollBarVisibility="Visible"/>
+            <DataGrid ItemsSource="{Binding Path=MediaStati, Mode=OneWay}" Height="200" VerticalScrollBarVisibility="Visible"/>
             
     </StackPanel>
     </DockPanel>

@@ -37,11 +37,11 @@ namespace WpfCastAnalyzer {
 
         private void RefreshDevices_Click(object sender, RoutedEventArgs e)
         {
-            foreach (var cc in SelectCastDevice.Items)
-            {
-                (cc as ChromecastViewModel).Disconnect();
-                (cc as ChromecastViewModel).Dispose();
-            }
+            //foreach (var cc in SelectCastDevice.Items)
+            //{
+            //    (cc as ChromecastViewModel).Disconnect();
+            //    (cc as ChromecastViewModel).Dispose();
+            //}
             this.SelectCastDevice.Items.Clear();
             var t = FindChromcasts();
         }
@@ -61,12 +61,12 @@ namespace WpfCastAnalyzer {
             });
         }
 
-        private void VolumeCtrlLocal_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e) {
-            if (CcViewModel != null)
-            {
-                var t = CcViewModel.SetVolume(e.NewValue / 100);
-            }
-        }
+        //private void VolumeCtrlLocal_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e) {
+        //    if (CcViewModel != null)
+        //    {
+        //        var t = CcViewModel.SetVolume(e.NewValue / 100);
+        //    }
+        //}
 
 
 

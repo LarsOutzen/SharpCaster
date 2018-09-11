@@ -232,7 +232,7 @@ namespace WpfCastAnalyzer
             ReceiverStatus = receiver.Status;
             IsActiveInput = status?.IsActiveInput;
             IsStandby = status?.IsStandBy;
-            VolumeLevel = status?.Volume?.Level ?? 0.0;
+            VolumeLevel = (status?.Volume?.Level ?? 0.0) * 100.0;
             VolumeMuted = status?.Volume?.Muted;
             Applications.Clear();
             if (status?.Applications != null)
