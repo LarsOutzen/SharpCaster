@@ -1,5 +1,5 @@
 ﻿using Sharpcaster.Core.Models.Media;
-using Wlb.MvvmBase;
+using MyMvvm;
 
 namespace WpfCastAnalyzer
 {
@@ -10,27 +10,27 @@ namespace WpfCastAnalyzer
         public int CurrentItemId
         {
             get { return ms.CurrentItemId; }
-            set { this.RaisePCifChanged(ms, () => ms.CurrentItemId, value); }
+            set { this.RaisePcIfChanged(() => ms.CurrentItemId, value, ()=>CurrentItemId, ms); }
         }
         public double CurrentTime
         {
             get { return ms.CurrentTime; }
-            set { this.RaisePCifChanged(ms, () => ms.CurrentTime, value); }
+            set { this.RaisePcIfChanged(() => ms.CurrentTime, value, ()=>CurrentTime, ms); }
         }
         public string IdleReason
         {
             get { return ms.IdleReason; }
-            set { this.RaisePCifChanged(ms, () => ms.IdleReason, value); }
+            set { this.RaisePcIfChanged(() => ms.IdleReason, value, () => IdleReason, ms); }
         }
         public long MediaSessionId
         {
             get { return ms.MediaSessionId; }
-            set { this.RaisePCifChanged(ms, () => ms.MediaSessionId, value); }
+            set { this.RaisePcIfChanged(() => ms.MediaSessionId, value, ()=>MediaSessionId, ms); }
         }
         public int PlaybackRate
         {
             get { return ms.PlaybackRate; }
-            set { this.RaisePCifChanged(ms, () => ms.PlaybackRate, value); }
+            set { this.RaisePcIfChanged(() => ms.PlaybackRate, value, ()=>MediaSessionId, ms); }
         }
         public string PlayerState
         {
@@ -40,22 +40,22 @@ namespace WpfCastAnalyzer
         public string RepeatMode
         {
             get { return ms.RepeatMode; }
-            set { this.RaisePCifChanged(ms, () => ms.RepeatMode, value); }
+            set { this.RaisePcIfChanged(() => ms.RepeatMode, value, () => ms.RepeatMode, ms); }
         }
         public int SupportedMediaCommands
         {
             get { return ms.SupportedMediaCommands; }
-            set { this.RaisePCifChanged(ms, () => ms.SupportedMediaCommands, value);  }
+            set { this.RaisePcIfChanged(() => ms.SupportedMediaCommands, value, ()=>SupportedMediaCommands, ms);  }
         }
         public double? MediaVolume
         {
             get { return ms.Volume.Level; }
-            set { this.RaisePCifChanged(ms, () => ms.Volume.Level, value); }
+            set { this.RaisePcIfChanged(() => ms.Volume.Level, value, ()=>MediaVolume, ms); }
         }
         public bool? MediaMuted
         {
             get { return ms.Volume.Muted; }
-            set { this.RaisePCifChanged(ms, () => ms.Volume.Muted, value); }
+            set { this.RaisePcIfChanged(() => ms.Volume.Muted, value, ()=>MediaMuted, ms); }
         }
 
         public string MediaContentType

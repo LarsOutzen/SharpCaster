@@ -276,6 +276,10 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\MyMvvm\MyMvvm.csproj">
+      <Project>{96FAC8F7-324C-4362-ACB8-68B9275CFC69}</Project>
+      <Name>MyMvvm</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Sharpcaster.core\Sharpcaster.Core.csproj">
       <Project>{CD837AE8-FBAC-4942-95AB-2019FEFC7168}</Project>
       <Name>Sharpcaster.Core</Name>

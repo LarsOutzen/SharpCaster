@@ -45,6 +45,8 @@
                 <Button Name="Pause" Content="Pause" Click="Pause_Click" IsEnabled="{Binding Path=IsMediaSessionAvailable}"/>
                 <Button Name="Play" Content="Play" Click="Play_Click" IsEnabled="{Binding Path=IsMediaSessionAvailable}"/>
                 <Button Name="Stop" Content="Stop" Click="Stop_Click" IsEnabled="{Binding Path=IsMediaSessionAvailable}"/>
+                <TextBox Name="Seconds" Text="{Binding Path=Seconds}" />
+                <Button Name="SeekPlus" Content="Seek +10" Click="Seek_Click" IsEnabled="{Binding Path=IsMediaSessionAvailable}"/>
             </StackPanel>
         
             <DataGrid ItemsSource="{Binding Path=MediaStati, Mode=OneWay}" Height="200" VerticalScrollBarVisibility="Visible"/>

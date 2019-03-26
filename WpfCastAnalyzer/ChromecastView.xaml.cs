@@ -67,6 +67,12 @@ namespace WpfCastAnalyzer
                 StreamType = StreamType.Live,
                 ContentType = "audio/mp4"
             };
+            //Media m = new Media
+            //{
+            //    ContentUrl = "spotify:track:1xgqGXZW1udHCjuwjeRDVO",
+            //    StreamType = StreamType.Buffered,
+            //    ContentType = "application/x-spotify.track"
+            //};
             CallAsyncWithExceptionHandling(MyViewModel.LoadMedia, m);
         }
 
@@ -80,6 +86,8 @@ namespace WpfCastAnalyzer
             };
             CallAsyncWithExceptionHandling(MyViewModel.LoadMedia, m);
         }
+
+
 
         private void Pause_Click(object sender, RoutedEventArgs e)
         {
@@ -95,6 +103,10 @@ namespace WpfCastAnalyzer
             CallAsyncWithExceptionHandling(MyViewModel.StopAsync);
         }
 
+        private void Seek_Click(object sender, RoutedEventArgs e)
+        {
+            CallAsyncWithExceptionHandling(MyViewModel.SeekAsync);
+        }
 
         private void CallAsyncWithExceptionHandling<T>(Func<Media, Task<T>> asyncMethod, Media m)
         {
@@ -117,6 +129,7 @@ namespace WpfCastAnalyzer
                 }
             });
         }
+
 
         private void CallAsyncWithExceptionHandling<T>(Func<Task<T>> asyncMethod)
         {
@@ -152,5 +165,7 @@ namespace WpfCastAnalyzer
         {
             return ex.Message + ( (ex.InnerException != null) ? Environment.NewLine + GetExceptionMessage(ex.InnerException) : "" );
         }
+
+      
     }
 }
