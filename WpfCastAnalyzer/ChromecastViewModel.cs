@@ -1,4 +1,5 @@
-﻿using Sharpcaster;
+﻿using MyMvvm;
+using Sharpcaster;
 using Sharpcaster.Core.Channels;
 using Sharpcaster.Core.Interfaces;
 using Sharpcaster.Core.Models;
@@ -13,7 +14,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Threading;
-using Wlb.MvvmBase;
+
 
 namespace WpfCastAnalyzer
 {
@@ -26,14 +27,15 @@ namespace WpfCastAnalyzer
 
         private BindingList<MediaStatusViewModel> _MediaStati = new BindingList<MediaStatusViewModel>();
         public BindingList<MediaStatusViewModel> MediaStati { get { return _MediaStati; }
-            set { this.RaisePCifChanged(ref _MediaStati, value, () => MediaStati); }
+            set { this.RaisePcIfChanged(()=>_MediaStati, value,() => MediaStati ); }
         }
+
 
         private BindingList<ChromecastApplication> _Applications = new BindingList<ChromecastApplication>();
         public BindingList<ChromecastApplication> Applications
         {
             get { return _Applications; }
-            set { this.RaisePCifChanged(ref _Applications, value, () => Applications); }
+            set { this.RaisePcIfChanged(()=>_Applications, value, () => Applications); }
         }
 
 
@@ -58,46 +60,57 @@ namespace WpfCastAnalyzer
             get { return "Device Uri: " + receiver.DeviceUri.ToString(); }
             set { }
         }
-        private string _ccrStatus;
+
+        private string _ccrStatus = null;
         public string ReceiverStatus
         {
             get { return _ccrStatus; }
-            set { RaisePCifChanged(ref _ccrStatus, value, () => ReceiverStatus);  }
+            set { RaisePcIfChanged(()=>_ccrStatus, value, () => ReceiverStatus);  }
         }
 
-        private bool? _IsActiveInput;
+        private bool? _IsActiveInput = null;
         public bool? IsActiveInput
         {
             get { return _IsActiveInput; }
-            set { RaisePCifChanged(ref _IsActiveInput, value, () => IsActiveInput); }
+            set { RaisePcIfChanged(()=>_IsActiveInput, value, () => IsActiveInput); }
         }
 
-        private bool? _IsStandby;
+        private bool? _IsStandby = null;
         public bool? IsStandby
         {
             get { return _IsStandby; }
-            set { RaisePCifChanged(ref _IsStandby, value, () => IsStandby); }
+            set { RaisePcIfChanged(()=>_IsStandby, value, () => IsStandby); }
         }
 
-        private double? _VolumeLevel;
+        private double? _VolumeLevel = null;
         public double? VolumeLevel
         {
             get { return _VolumeLevel; }
-            set { RaisePCifChanged(ref _VolumeLevel, value, () => VolumeLevel); }
+            set { RaisePcIfChanged(()=>_VolumeLevel, value, () => VolumeLevel); }
         }
 
-        private bool? _VolumeMuted;
+
+        private double? _seconds = null;
+        public double? Seconds
+        {
+            get { return _seconds; }
+            set { RaisePcIfChanged(()=>_seconds, value, () => Seconds); }
+        }
+
+
+
+        private bool? _VolumeMuted = null;
         public bool? VolumeMuted
         {
             get { return _VolumeMuted; }
-            set { RaisePCifChanged(ref _VolumeMuted, value, () => VolumeMuted); }
+            set { RaisePcIfChanged(()=>_VolumeMuted, value, () => VolumeMuted); }
         }
 
-        private string _ConnectedApp;
+        private string _ConnectedApp = null;
         public string ConnectedApp
         {
             get { return _ConnectedApp; }
-            set { if (RaisePCifChanged(ref _ConnectedApp, value, () => ConnectedApp)) {
+            set { if (RaisePcIfChanged(()=>_ConnectedApp, value, () => ConnectedApp)) {
                     RaisePC(() => IsAppConnected);
                     } }
         }
@@ -216,6 +229,19 @@ namespace WpfCastAnalyzer
             }
             return ms;
         }
+
+        public async Task<MediaStatus> SeekAsync()
+        {
+            MediaStatus ms = null;
+            if(client != null)
+            {
+                var mc = client.GetChannel<MediaChannel>();
+                ms = await mc.SeekAsync(Seconds??0 + 10);
+            }
+            return ms;
+        }
+
+
 
         public async Task SetVolume(double v)
         {

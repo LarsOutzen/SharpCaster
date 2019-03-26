@@ -9,13 +9,24 @@
         Unloaded="Window_Unloaded">
     <DockPanel>
         <ComboBox DockPanel.Dock="Top" Name="SelectCastDevice" MinHeight="30" SelectionChanged="SelectCastDevice_SelectionChanged" DisplayMemberPath="Name"/>
-        <TextBox DockPanel.Dock="Bottom" Name="Status" ></TextBox>
+        <TextBox DockPanel.Dock="Bottom" Name="Status" Text="{Binding Path=StatusLine}" ></TextBox>
         <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
             <Slider Name = "VolumeCtrlDevice" Orientation="Vertical" Width="30" Maximum="60" IsEnabled="False"/>
             <Slider Name = "VolumeCtrlLocal" Orientation="Vertical" Width="30" Maximum="60" ValueChanged="VolumeCtrlLocal_ValueChanged"/>
         </StackPanel>
-        <WrapPanel Name="StationPanel">
-            <Button Name="StopBtn" Click="StopBtn_Click" MinWidth="60" MinHeight="60" Content="Stop"/>
-        </WrapPanel>
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"></RowDefinition>
+                <RowDefinition Height="20"></RowDefinition>
+            </Grid.RowDefinitions>
+            <WrapPanel Name="StationPanel">
+                <Button Name="StopBtn" Click="StopBtn_Click" MinWidth="60" MinHeight="60" Content="Stop" Margin="8" IsEnabled="{Binding Path=IsPlaying}"/>
+            </WrapPanel>
+            <DockPanel Grid.Row="1">
+                <Button DockPanel.Dock="Left" Name="SeekBack"  Content=">--" Click="SeekBack_Click"/>
+                <Button DockPanel.Dock="Right" Name="SeekFwd"  Content="-->" Click="SeekFwd_Click"/>
+                <ProgressBar Name = "Progress" Background="Aquamarine" Value="50"/>
+            </DockPanel>
+        </Grid>
     </DockPanel>
 </Window>
