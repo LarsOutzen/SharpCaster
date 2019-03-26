@@ -8,10 +8,10 @@ using MyMvvm;
 namespace WpfWebRadio {
     public class MainVm : BaseViewModel {
 
-        private StationVm CurrentStation = null;
+        private IPlaybackVm CurrentStation = null;
 
-        private List<StationVm> Stations = new List<StationVm>();
-        public void AddStation(StationVm svm) {
+        private List<IPlaybackVm> Stations = new List<IPlaybackVm>();
+        public void AddStation(IPlaybackVm svm) {
             Stations.Add(svm);
         }
 
@@ -36,13 +36,13 @@ namespace WpfWebRadio {
 
         public void SelectStation(string mediaUrl) {
             CurrentStation?.Deselect();
-            CurrentStation = Stations.Where(svm=>svm.Url == mediaUrl).FirstOrDefault();
-            SelectCurrentStation();
+            CurrentStation = Stations.Where(svm=>svm.HasUrl(mediaUrl)).FirstOrDefault();
+            SelectCurrentStation(mediaUrl);
         }
 
-        private void SelectCurrentStation() {
+        private void SelectCurrentStation(string mediaUrl = null) {
             if (CurrentStation != null) {
-                CurrentStation.Select();
+                CurrentStation.Select(mediaUrl);
                 IsPlaying = true;
             } else {
                 IsPlaying = false;

@@ -8,7 +8,10 @@ using System.Windows.Data;
 using MyMvvm;
 
 namespace WpfWebRadio {
-    public class StationVm :BaseViewModel  {
+    public class StationVm :BaseViewModel , IPlaybackVm {
+
+        public List<string> AllTitles = new List<string>() { "abc", "def", "xyz" };
+
 
         private string _Url = null;
         public string Url {
@@ -32,10 +35,12 @@ namespace WpfWebRadio {
             IsPlaying = false;
         }
 
-        public void Select() {
+        public void Select(string mediaUrl) {
             IsPlaying = true;
         }
 
-    
+        public bool HasUrl(string mediaUrl) {
+            return Url?.Equals(mediaUrl) ?? false;
+        }
     }
 }

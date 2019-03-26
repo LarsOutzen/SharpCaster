@@ -20,7 +20,7 @@ namespace WpfWebRadio {
     /// </summary>
     public partial class MainWindow : Window {
 
-        private MainVm MyViewModel = new MainVm();
+        private MainVm MainViewModel = new MainVm();
 
         private const string SharpcasterAppId = "B3419EF5";
         private Dictionary<string, ChromecastClient> MyClients = new Dictionary<string, ChromecastClient>();
@@ -28,7 +28,7 @@ namespace WpfWebRadio {
 
         public MainWindow() {
             InitializeComponent();
-            DataContext = MyViewModel;
+            DataContext = MainViewModel;
             ReadStationConfig();
             CallAsyncWithExceptionHandling(FindChromcastsAsync(), (ex) => { DisplayException(ex); });
         }
@@ -37,7 +37,7 @@ namespace WpfWebRadio {
             foreach(string settingLine in Properties.Settings.Default.MyStations) {
                 string[] args = settingLine.Split('|');
                 StationVm svm = new StationVm() { Url = args[0], Title = args[1] };
-                MyViewModel.AddStation(svm);
+                MainViewModel.AddStation(svm);
 
                 Button b = new Button() {
                     MinWidth = 60,
@@ -58,20 +58,54 @@ namespace WpfWebRadio {
             }
             foreach(string settingLine in Properties.Settings.Default.MyPodcasts) {
                 string[] args = settingLine.Split('|');
-                Podcast pc = new Podcast(args);
+                PodcastVm pc = new PodcastVm(args);
+                pc.LoadTitles();
+                MainViewModel.AddStation(pc);
+
+                StackPanel sp = new StackPanel() {
+                    Orientation = Orientation.Horizontal,
+                    Margin = new Thickness(8),
+                    IsEnabled = false
+                };
+
+                ComboBox cb = new ComboBox() {
+                    MinWidth = 60,
+                    MinHeight = 60,
+                    DataContext = pc,        
+                    IsEnabled = true,
+                    BorderThickness = new Thickness(0,4,4,4)
+                };
+                cb.VerticalContentAlignment = VerticalAlignment.Center;
+                cb.SelectionChanged += Podcast_SelectionChanged;                
+
                 Button b = new Button() {
                     MinWidth = 60,
                     MinHeight = 60,
-                    Margin = new Thickness(8),
-                    Content = pc.ButtonTitle,      // The Stations name
-                    DataContext = pc,        // The Stations URI
-                    IsEnabled = false,
-                    BorderThickness = new Thickness(4)
+                    DataContext = pc,        
+                    IsEnabled = true,
+                    BorderThickness = new Thickness(4,4,0,4)
                 };
-                b.Click += PodcastButton_Click; ;
-                this.StationPanel.Children.Add(b);
+                sp.Children.Add(b);
+                sp.Children.Add(cb);
+
+                Binding myBinding = new Binding("Title") { Source = pc };
+                b.SetBinding(Button.ContentProperty, myBinding);
+
+                Binding myBinding2 = new Binding("IsPlaying") { Source = pc };
+                myBinding2.Converter = new IsPlayingConverter();
+                b.SetBinding(Button.BackgroundProperty, myBinding2);
+
+                Binding myBinding3 = new Binding("AllTitles") { Source = pc };
+                cb.SetBinding(ComboBox.ItemsSourceProperty, myBinding3);
+
+                Binding myBinding4 = new Binding("SelectedTitle") { Source = pc };
+                cb.SetBinding(ComboBox.SelectedItemProperty, myBinding4);
+
+                b.Click += PodcastButton_Click;
+                this.StationPanel.Children.Add(sp);
             }
         }
+
 
         private async Task FindChromcastsAsync() {
             IChromecastLocator locator = new Sharpcaster.Discovery.MdnsChromecastLocator();
@@ -83,7 +117,7 @@ namespace WpfWebRadio {
                         this.SelectCastDevice.SelectedItem = cc;
                     }
                 }
-                MyViewModel.StatusLine = $"Found {chromecasts.Count()} Chromecast(s).";
+                MainViewModel.StatusLine = $"Found {chromecasts.Count()} Chromecast(s).";
             });
         }
 
@@ -97,7 +131,7 @@ namespace WpfWebRadio {
                     CallAsyncWithExceptionHandling(ConnectClient(ccr), (ex) => { DisplayException(ex); });
                 } else {
                     var st = this.SelectedChromeCastClient?.GetChromecastStatus();
-                    MyViewModel.StatusLine = $"Switched to {ccr.Name}. Volume: {st?.Volume?.Level} ";
+                    MainViewModel.StatusLine = $"Switched to {ccr.Name}. Volume: {st?.Volume?.Level} ";
                     EnableButtons(null);
                     VolumeCtrlLocal.Value = (st?.Volume?.Level ?? 0) * 100;
                     VolumeCtrlDevice.Value = (st?.Volume?.Level ?? 0) * 100;
@@ -128,7 +162,7 @@ namespace WpfWebRadio {
                 Dispatcher.Invoke(() => {
                     this.SelectedChromeCastClient = client;
                     EnableButtons(mediaUrl);
-                    MyViewModel.StatusLine = $"App: {status.Applications[0].DisplayName} on {ccr.Name} connected. Volume: {status?.Volume?.Level} Url:{mediaUrl}";
+                    MainViewModel.StatusLine = $"App: {status.Applications[0].DisplayName} on {ccr.Name} connected. Volume: {status?.Volume?.Level} Url:{mediaUrl}";
                     VolumeCtrlLocal.Value = (status?.Volume?.Level ?? 0) * 100;
                     VolumeCtrlDevice.Value = (status?.Volume?.Level ?? 0) * 100;
                 });
@@ -144,7 +178,7 @@ namespace WpfWebRadio {
             string medienUrl = ms?.Media?.ContentUrl;
             if(ms != null) {
                 Dispatcher.InvokeAsync(() => {
-                    MyViewModel.StatusLine = $"{receiverName}/M[{ms.MediaSessionId}]: {ms.CurrentTime}/{ms.PlayerState}/{ms.Media?.ContentUrl}/{ms.IdleReason}";
+                    MainViewModel.StatusLine = $"{receiverName}/M[{ms.MediaSessionId}]: {ms.CurrentTime}/{ms.PlayerState}/{ms.Media?.ContentUrl}/{ms.IdleReason}";
                     if((this.SelectedChromeCastClient == client) && (!string.IsNullOrEmpty(medienUrl))) {
                         EnableButtons(medienUrl);
                     }
@@ -164,14 +198,14 @@ namespace WpfWebRadio {
                 CallAsyncWithExceptionHandling(DisconnectDeviceAsync(receiverName, rc), (ex) => DisplayException(ex));
             }
             Dispatcher.InvokeAsync(() => {
-                MyViewModel.StatusLine = $"{receiverName}/C[{a?.AppId}]: {a?.DisplayName}/{status?.Volume?.Level}";
+                MainViewModel.StatusLine = $"{receiverName}/C[{a?.AppId}]: {a?.DisplayName}/{status?.Volume?.Level}";
                 VolumeCtrlDevice.Value = (status?.Volume?.Level ?? 0) * 100;
             });
         }
 
         private void Client_Disconnected(object sender, EventArgs e) {
             var client = sender as ChromecastClient;
-            Dispatcher.InvokeAsync(() => MyViewModel.StatusLine += $"*** Disconnected App.");
+            Dispatcher.InvokeAsync(() => MainViewModel.StatusLine += $"*** Disconnected App.");
         }
 
         private async Task DisconnectDeviceAsync(String receiverName, ReceiverChannel rc) {
@@ -188,13 +222,23 @@ namespace WpfWebRadio {
         private async void PodcastButton_Click(object sender, RoutedEventArgs e) {
             Button b = sender as Button;
             try {
-                Podcast pc = (Podcast)b.DataContext;
-                pc.LoadTitles();
+                PodcastVm pc = (PodcastVm)b.DataContext;
+                pc.PlaySelected();
+                pc.CurDuration = await LoadPcMedia(pc.Url);
+                
+            } catch(Exception ex) {
+                DisplayException(ex);
+            }
+        }
 
-                pc.PlayNewest();
-                b.Content = pc.CurTitle;
-                pc.CurDuration = await LoadPcMedia(pc.CurUrl);
-
+        private async void Podcast_SelectionChanged(object sender, SelectionChangedEventArgs e) {
+            ComboBox cb = sender as ComboBox;
+            try {
+                PodcastVm pc = (PodcastVm)cb.DataContext;
+                if(pc.IsPlaying) {
+                    pc.PlaySelected();
+                    pc.CurDuration = await LoadPcMedia(pc.Url);
+                }
             } catch(Exception ex) {
                 DisplayException(ex);
             }
@@ -203,12 +247,12 @@ namespace WpfWebRadio {
         private void StationButton_Click(object sender, RoutedEventArgs e) {
             Button b = sender as Button;
             StationVm svm = (StationVm)b.DataContext;
-            MyViewModel.SelectStation(svm);
+            MainViewModel.SelectStation(svm);
             CallAsyncWithExceptionHandling(LoadMedia(svm.Url), (ex) => DisplayException(ex));
         }
 
         private void StopBtn_Click(object sender, RoutedEventArgs e) {
-            if(MyViewModel.IsPlaying) { 
+            if(MainViewModel.IsPlaying) { 
                 CallAsyncWithExceptionHandling(SelectedChromeCastClient?.GetChannel<IMediaChannel>()?.StopAsync(), (ex) => DisplayException(ex));
             }
             EnableButtons(null);
@@ -248,6 +292,11 @@ namespace WpfWebRadio {
                 if(b != null && b.Name != "StopBtn") {
                     b.IsEnabled = false;
                 }
+                StackPanel cb = c as StackPanel;
+                if(cb != null) {
+                    cb.IsEnabled = false;
+                }
+
             }
         }
 
@@ -257,15 +306,19 @@ namespace WpfWebRadio {
                 if(b != null && b.Name != "StopBtn") {
                     b.IsEnabled = true;
                 }
+                StackPanel cb = c as StackPanel;
+                if(cb != null) {
+                    cb.IsEnabled = true;
+                }
             }
-            MyViewModel.SelectStation(mediaUrl);
+            MainViewModel.SelectStation(mediaUrl);
         }
 
         private void DisplayException(Exception ex) {
             Dispatcher.Invoke(() => {
-                MyViewModel.StatusLine = ex.Message;
+                MainViewModel.StatusLine = ex.Message;
                 if(ex.InnerException != null) {
-                    MessageBox.Show(ex.Message + Environment.NewLine + ex.InnerException.Message);
+                    System.Windows.MessageBox.Show(ex.Message + Environment.NewLine + ex.InnerException.Message);
                 }
             });
         }
