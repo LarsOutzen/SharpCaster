@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Timers;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -20,6 +21,10 @@ namespace WpfWebRadio {
     /// </summary>
     public partial class MainWindow : Window {
 
+        private static readonly int C_SYNC_SECONDS = 10;
+        private Timer timer = new Timer();
+        private int syncTicks = C_SYNC_SECONDS;
+
         private MainVm MainViewModel = new MainVm();
 
         private const string SharpcasterAppId = "B3419EF5";
@@ -31,79 +36,100 @@ namespace WpfWebRadio {
             DataContext = MainViewModel;
             ReadStationConfig();
             CallAsyncWithExceptionHandling(FindChromcastsAsync(), (ex) => { DisplayException(ex); });
+            timer.Interval = 1000;
+            timer.Elapsed += Timer_Elapsed;
+            timer.Start();
         }
 
+        private void Timer_Elapsed(object sender, ElapsedEventArgs e) {
+            if(MainViewModel.IsPlaying) {
+                MainViewModel.AddCurrentTime(1.0);
+                syncTicks--;
+                if(syncTicks <= 0) {
+                    syncTicks = C_SYNC_SECONDS;
+                    SelectedChromeCastClient?.GetChannel<MediaChannel>()?.GetStatusAsync();
+                }
+            }
+        }
+
+        // Create GUI Section with Station/Podcast buttons from Config
         private void ReadStationConfig() {
             foreach(string settingLine in Properties.Settings.Default.MyStations) {
                 string[] args = settingLine.Split('|');
-                StationVm svm = new StationVm() { Url = args[0], Title = args[1] };
-                MainViewModel.AddStation(svm);
-
-                Button b = new Button() {
-                    MinWidth = 60,
-                    MinHeight = 60,
-                    Margin = new Thickness(8),
-                    DataContext = svm,
-                    IsEnabled = false
-                };
-                Binding myBinding = new Binding("Title") { Source = svm };
-                b.SetBinding(Button.ContentProperty, myBinding);
-
-                Binding myBinding2 = new Binding("IsPlaying") { Source = svm };
-                myBinding2.Converter = new IsPlayingConverter();
-                b.SetBinding(Button.BackgroundProperty, myBinding2);
-
-                b.Click += StationButton_Click; ;
-                this.StationPanel.Children.Add(b);
+                AddRadioStation(new StationVm() { Url = args[0], Title = args[1] });
             }
             foreach(string settingLine in Properties.Settings.Default.MyPodcasts) {
                 string[] args = settingLine.Split('|');
                 PodcastVm pc = new PodcastVm(args);
                 pc.LoadTitles();
-                MainViewModel.AddStation(pc);
+                AddPodcast(pc);
+            }   
+        }
 
-                StackPanel sp = new StackPanel() {
-                    Orientation = Orientation.Horizontal,
-                    Margin = new Thickness(8),
-                    IsEnabled = false
-                };
+        private void AddPodcast(PodcastVm pc) {
+            MainViewModel.AddStation(pc);
+            StackPanel sp = new StackPanel() {
+                Orientation = Orientation.Horizontal,
+                Margin = new Thickness(8),
+                IsEnabled = false
+            };
 
-                ComboBox cb = new ComboBox() {
-                    MinWidth = 60,
-                    MinHeight = 60,
-                    DataContext = pc,        
-                    IsEnabled = true,
-                    BorderThickness = new Thickness(0,4,4,4)
-                };
-                cb.VerticalContentAlignment = VerticalAlignment.Center;
-                cb.SelectionChanged += Podcast_SelectionChanged;                
+            ComboBox cb = new ComboBox() {
+                MinWidth = 60,
+                MinHeight = 60,
+                DataContext = pc,
+                IsEnabled = true,
+                BorderThickness = new Thickness(0, 4, 4, 4)
+            };
+            cb.VerticalContentAlignment = VerticalAlignment.Center;
+            cb.SelectionChanged += Podcast_SelectionChanged;
 
-                Button b = new Button() {
-                    MinWidth = 60,
-                    MinHeight = 60,
-                    DataContext = pc,        
-                    IsEnabled = true,
-                    BorderThickness = new Thickness(4,4,0,4)
-                };
-                sp.Children.Add(b);
-                sp.Children.Add(cb);
+            Button b = new Button() {
+                MinWidth = 60,
+                MinHeight = 60,
+                DataContext = pc,
+                IsEnabled = true,
+                BorderThickness = new Thickness(4, 4, 0, 4)
+            };
+            sp.Children.Add(b);
+            sp.Children.Add(cb);
 
-                Binding myBinding = new Binding("Title") { Source = pc };
-                b.SetBinding(Button.ContentProperty, myBinding);
+            Binding myBinding = new Binding("Title") { Source = pc };
+            b.SetBinding(Button.ContentProperty, myBinding);
 
-                Binding myBinding2 = new Binding("IsPlaying") { Source = pc };
-                myBinding2.Converter = new IsPlayingConverter();
-                b.SetBinding(Button.BackgroundProperty, myBinding2);
+            Binding myBinding2 = new Binding("IsPlaying") { Source = pc };
+            myBinding2.Converter = new IsPlayingConverter();
+            b.SetBinding(Button.BackgroundProperty, myBinding2);
 
-                Binding myBinding3 = new Binding("AllTitles") { Source = pc };
-                cb.SetBinding(ComboBox.ItemsSourceProperty, myBinding3);
+            Binding myBinding3 = new Binding("AllTitles") { Source = pc };
+            cb.SetBinding(ComboBox.ItemsSourceProperty, myBinding3);
 
-                Binding myBinding4 = new Binding("SelectedTitle") { Source = pc };
-                cb.SetBinding(ComboBox.SelectedItemProperty, myBinding4);
+            Binding myBinding4 = new Binding("SelectedTitle") { Source = pc };
+            cb.SetBinding(ComboBox.SelectedItemProperty, myBinding4);
 
-                b.Click += PodcastButton_Click;
-                this.StationPanel.Children.Add(sp);
-            }
+            b.Click += PodcastButton_Click;
+            this.StationPanel.Children.Add(sp);
+        }
+
+        private void AddRadioStation(StationVm svm) {
+            MainViewModel.AddStation(svm);
+
+            Button b = new Button() {
+                MinWidth = 60,
+                MinHeight = 60,
+                Margin = new Thickness(8),
+                DataContext = svm,
+                IsEnabled = false
+            };
+            Binding myBinding = new Binding("Title") { Source = svm };
+            b.SetBinding(Button.ContentProperty, myBinding);
+
+            Binding myBinding2 = new Binding("IsPlaying") { Source = svm };
+            myBinding2.Converter = new IsPlayingConverter();
+            b.SetBinding(Button.BackgroundProperty, myBinding2);
+
+            b.Click += StationButton_Click; ;
+            this.StationPanel.Children.Add(b);
         }
 
 
@@ -158,11 +184,15 @@ namespace WpfWebRadio {
 
                 MediaStatus ms = await client.GetChannel<MediaChannel>().GetStatusAsync();
                 string mediaUrl = ms?.Media?.ContentUrl;
+                
 
                 Dispatcher.Invoke(() => {
                     this.SelectedChromeCastClient = client;
                     EnableButtons(mediaUrl);
                     MainViewModel.StatusLine = $"App: {status.Applications[0].DisplayName} on {ccr.Name} connected. Volume: {status?.Volume?.Level} Url:{mediaUrl}";
+                    MainViewModel.SetDuration(ms?.Media?.Duration);
+                    MainViewModel.SetCurrentTime(ms?.CurrentTime);
+
                     VolumeCtrlLocal.Value = (status?.Volume?.Level ?? 0) * 100;
                     VolumeCtrlDevice.Value = (status?.Volume?.Level ?? 0) * 100;
                 });
@@ -179,6 +209,7 @@ namespace WpfWebRadio {
             if(ms != null) {
                 Dispatcher.InvokeAsync(() => {
                     MainViewModel.StatusLine = $"{receiverName}/M[{ms.MediaSessionId}]: {ms.CurrentTime}/{ms.PlayerState}/{ms.Media?.ContentUrl}/{ms.IdleReason}";
+                    MainViewModel.SetCurrentTime(ms.CurrentTime);
                     if((this.SelectedChromeCastClient == client) && (!string.IsNullOrEmpty(medienUrl))) {
                         EnableButtons(medienUrl);
                     }
@@ -219,25 +250,24 @@ namespace WpfWebRadio {
             await rc.Client.DisconnectAsync();
         }
 
-        private async void PodcastButton_Click(object sender, RoutedEventArgs e) {
+        private void PodcastButton_Click(object sender, RoutedEventArgs e) {
             Button b = sender as Button;
             try {
                 PodcastVm pc = (PodcastVm)b.DataContext;
                 pc.PlaySelected();
-                pc.CurDuration = await LoadPcMedia(pc.Url);
-                
+                CallAsyncWithExceptionHandling(LoadMedia(pc.Url), (ex) => DisplayException(ex));
             } catch(Exception ex) {
                 DisplayException(ex);
             }
         }
 
-        private async void Podcast_SelectionChanged(object sender, SelectionChangedEventArgs e) {
+        private void Podcast_SelectionChanged(object sender, SelectionChangedEventArgs e) {
             ComboBox cb = sender as ComboBox;
             try {
                 PodcastVm pc = (PodcastVm)cb.DataContext;
                 if(pc.IsPlaying) {
                     pc.PlaySelected();
-                    pc.CurDuration = await LoadPcMedia(pc.Url);
+                    CallAsyncWithExceptionHandling(LoadMedia(pc.Url), (ex) => DisplayException(ex));
                 }
             } catch(Exception ex) {
                 DisplayException(ex);
@@ -254,6 +284,7 @@ namespace WpfWebRadio {
         private void StopBtn_Click(object sender, RoutedEventArgs e) {
             if(MainViewModel.IsPlaying) { 
                 CallAsyncWithExceptionHandling(SelectedChromeCastClient?.GetChannel<IMediaChannel>()?.StopAsync(), (ex) => DisplayException(ex));
+                MainViewModel.SetDuration(null);
             }
             EnableButtons(null);
         }
@@ -263,52 +294,31 @@ namespace WpfWebRadio {
         }
 
 
-
         private async Task LoadMedia(string meduiaUrl) {
             var media = new Media {
                 ContentUrl = meduiaUrl,
                 StreamType = StreamType.Live,
                 ContentType = "audio/mp4"
-
-            };
-            await SelectedChromeCastClient?.GetChannel<IMediaChannel>()?.LoadAsync(media);
-        }
-
-        private async Task<double?> LoadPcMedia(string meduiaUrl) {
-            var media = new Media {
-                ContentUrl = meduiaUrl,
-                StreamType = StreamType.Live,
-                ContentType = "audio/mp4"
-
             };
             var ms = await SelectedChromeCastClient?.GetChannel<IMediaChannel>()?.LoadAsync(media);
-            return ms?.Media?.Duration;
+            MainViewModel.SetDuration(ms?.Media?.Duration);
         }
 
 
         private void DisableButtons() {
             foreach(var c in this.StationPanel.Children) {
-                Button b = c as Button;
-                if(b != null && b.Name != "StopBtn") {
-                    b.IsEnabled = false;
+                FrameworkElement uie = c as FrameworkElement;
+                if(uie != null && uie.Name != "StopBtn") {
+                    uie.IsEnabled = false;
                 }
-                StackPanel cb = c as StackPanel;
-                if(cb != null) {
-                    cb.IsEnabled = false;
-                }
-
             }
         }
 
         private void EnableButtons(string mediaUrl) {
             foreach(var c in this.StationPanel.Children) {
-                Button b = c as Button;
-                if(b != null && b.Name != "StopBtn") {
-                    b.IsEnabled = true;
-                }
-                StackPanel cb = c as StackPanel;
-                if(cb != null) {
-                    cb.IsEnabled = true;
+                FrameworkElement uie = c as FrameworkElement;
+                if(uie != null && uie.Name != "StopBtn") {
+                    uie.IsEnabled = true;
                 }
             }
             MainViewModel.SelectStation(mediaUrl);
@@ -339,18 +349,13 @@ namespace WpfWebRadio {
 
         }
 
-
         private void Window_Unloaded(object sender, RoutedEventArgs e) {
-            //foreach (var cc in MyClients.Values) {
-            //    try {
-            //        var t = cc.DisconnectAsync();
-            //    } catch (Exception ex) {
-            //        DisplayException(ex);
-            //    }
-            //}
+           
         }
-
-
+    
+        private void ProgressSl_DragCompleted(object sender, System.Windows.Controls.Primitives.DragCompletedEventArgs e) {
+            Console.WriteLine($"DC: {e.VerticalChange} {ProgressSl.Value}");
+        }
     }
 
     #region IValueConverter for IsPlaying -> Background Brush 

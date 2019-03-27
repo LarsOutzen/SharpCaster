@@ -18,7 +18,7 @@
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="*"></RowDefinition>
-                <RowDefinition Height="20"></RowDefinition>
+                <RowDefinition Height="40"></RowDefinition>
             </Grid.RowDefinitions>
             <WrapPanel Name="StationPanel">
                 <Button Name="StopBtn" Click="StopBtn_Click" MinWidth="60" MinHeight="60" Content="Stop" Margin="8" IsEnabled="{Binding Path=IsPlaying}"/>
@@ -26,7 +26,9 @@
             <DockPanel Grid.Row="1">
                 <Button DockPanel.Dock="Left" Name="SeekBack"  Content=">--" Click="SeekBack_Click"/>
                 <Button DockPanel.Dock="Right" Name="SeekFwd"  Content="-->" Click="SeekFwd_Click"/>
-                <ProgressBar Name = "Progress" Background="Aquamarine" Value="50"/>
+                <ProgressBar DockPanel.Dock="Top"  Maximum="210" Value="58" Height="20" Name = "Progress" Background="Aquamarine"/>
+                <TextBox DockPanel.Dock="Top"  Text="{Binding Path=Duration}"/>
+                <Slider Name = "ProgressSl"  Maximum="210" Value="58" Thumb.DragCompleted="ProgressSl_DragCompleted"/>
             </DockPanel>
         </Grid>
     </DockPanel>
