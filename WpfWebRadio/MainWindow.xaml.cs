@@ -63,7 +63,7 @@ namespace WpfWebRadio {
                 PodcastVm pc = new PodcastVm(args);
                 pc.LoadTitles();
                 AddPodcast(pc);
-            }   
+            }
         }
 
         private void AddPodcast(PodcastVm pc) {
@@ -184,7 +184,7 @@ namespace WpfWebRadio {
 
                 MediaStatus ms = await client.GetChannel<MediaChannel>().GetStatusAsync();
                 string mediaUrl = ms?.Media?.ContentUrl;
-                
+
 
                 Dispatcher.Invoke(() => {
                     this.SelectedChromeCastClient = client;
@@ -282,7 +282,7 @@ namespace WpfWebRadio {
         }
 
         private void StopBtn_Click(object sender, RoutedEventArgs e) {
-            if(MainViewModel.IsPlaying) { 
+            if(MainViewModel.IsPlaying) {
                 CallAsyncWithExceptionHandling(SelectedChromeCastClient?.GetChannel<IMediaChannel>()?.StopAsync(), (ex) => DisplayException(ex));
                 MainViewModel.SetDuration(null);
             }
@@ -341,40 +341,60 @@ namespace WpfWebRadio {
             });
         }
 
-        private void SeekBack_Click(object sender, RoutedEventArgs e) {
-
-        }
-
-        private void SeekFwd_Click(object sender, RoutedEventArgs e) {
-
-        }
-
+  
         private void Window_Unloaded(object sender, RoutedEventArgs e) {
-           
+
         }
-    
+
+        private bool InUserDrag = false;
+        private void ProgressSl_DragStarted(object sender, System.Windows.Controls.Primitives.DragStartedEventArgs e) {
+            InUserDrag = true;
+        }
         private void ProgressSl_DragCompleted(object sender, System.Windows.Controls.Primitives.DragCompletedEventArgs e) {
-            Console.WriteLine($"DC: {e.VerticalChange} {ProgressSl.Value}");
+            InUserDrag = false;
+            DoSeek();
         }
-    }
 
-    #region IValueConverter for IsPlaying -> Background Brush 
-    class IsPlayingConverter : IValueConverter {
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture) {
-            bool? isSet = value as bool?;
-            if(isSet ?? false) {
-                return Brushes.Brown;
+        private void ProgressSl_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e) {
+            if(!InUserDrag && e.NewValue != MainViewModel.Progress) {
+                DoSeek();
             } 
-            return Brushes.LightGray;
         }
 
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) {
-            Brush b = value as Brush;
-            if (b.Equals(Brushes.Brown)) {
-                return true;
+        private void DoSeek() {
+            double? dur = MainViewModel.GetDuration();
+            if(dur != null) {
+                double seek = (dur ?? 0.0) * ProgressSl.Value / 100.0;
+                if(seek >= 0) {
+                    CallAsyncWithExceptionHandling(SelectedChromeCastClient?.GetChannel<IMediaChannel>()?.SeekAsync(seek), (ex) => DisplayException(ex));
+                }
+            } else {
+                MainViewModel.ProgressSlider = MainViewModel.Progress;
             }
-            return false;
         }
+
     }
-    #endregion
+   
+
 }
+
+#region IValueConverter for IsPlaying -> Background Brush 
+class IsPlayingConverter : IValueConverter {
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture) {
+        bool? isSet = value as bool?;
+        if(isSet ?? false) {
+            return Brushes.Brown;
+        }
+        return Brushes.LightGray;
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) {
+        Brush b = value as Brush;
+        if(b.Equals(Brushes.Brown)) {
+            return true;
+        }
+        return false;
+    }
+}
+    #endregion
+
