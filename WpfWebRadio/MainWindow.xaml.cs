@@ -213,6 +213,10 @@ namespace WpfWebRadio {
                     if((this.SelectedChromeCastClient == client) && (!string.IsNullOrEmpty(medienUrl))) {
                         EnableButtons(medienUrl);
                     }
+                    if (MainViewModel.IsPlaying && ms.PlayerState == PlayerStateType.Idle) {
+                        EnableButtons(null);
+                        MainViewModel.SetDuration(null);
+                    }
                 });
             }
         }
@@ -372,10 +376,7 @@ namespace WpfWebRadio {
                 MainViewModel.ProgressSlider = MainViewModel.Progress;
             }
         }
-
     }
-   
-
 }
 
 #region IValueConverter for IsPlaying -> Background Brush 
