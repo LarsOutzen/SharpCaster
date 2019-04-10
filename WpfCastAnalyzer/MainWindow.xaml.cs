@@ -1,28 +1,12 @@
 ﻿using Sharpcaster;
-using Sharpcaster.Core.Channels;
 using Sharpcaster.Core.Interfaces;
-using Sharpcaster.Core.Models;
-using Sharpcaster.Core.Models.ChromecastStatus;
-using Sharpcaster.Core.Models.Media;
-using Sharpcaster.Logging.ApplicationInsight;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 
-namespace WpfCastAnalyzer {
-   
+namespace WpfCastAnalyzer
+{
+
 
     public partial class MainWindow : Window {
 
@@ -30,7 +14,7 @@ namespace WpfCastAnalyzer {
         private ChromecastViewModel CcViewModel { get { return this.SelectCastDevice?.SelectedItem as ChromecastViewModel; } }
 
         public MainWindow() {
-            var logger = new ApplicationInsightLogger();
+            //var logger = new ApplicationInsightLogger();
             InitializeComponent();
             var t = FindChromcasts();
         }

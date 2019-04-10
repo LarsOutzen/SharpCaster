@@ -27,7 +27,7 @@ namespace Sharpcaster.Test
             };
             var chromecasts = await locator.FindReceiversAsync();
             Assert.NotEmpty(chromecasts);
-            Assert.NotEqual(counter, 0);
+            Assert.NotEqual(0,counter);
         }
 
         [Fact]

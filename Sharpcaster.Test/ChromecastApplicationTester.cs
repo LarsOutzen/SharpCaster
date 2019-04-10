@@ -15,7 +15,7 @@ namespace Sharpcaster.Test
 
             status = await client.LaunchApplicationAsync("B3419EF5");
 
-            Assert.Equal(status.Applications[0].AppId, "B3419EF5");
+            Assert.Equal("B3419EF5", status.Applications[0].AppId);
         }
 
         [Fact]
