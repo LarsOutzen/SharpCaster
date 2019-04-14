@@ -25,7 +25,7 @@ namespace WpfWebRadio {
     /// </summary>
     public partial class MainWindow : Window {
 
-        private const string SharpcasterAppId = "B3419EF5";
+        private const string SharpcasterAppId = "CC1AD845";
         private Dictionary<string, ChromecastClient> MyClients = new Dictionary<string, ChromecastClient>();
         private ChromecastClient SelectedChromeCastClient = null;
 
