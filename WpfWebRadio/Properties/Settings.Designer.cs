@@ -67,5 +67,17 @@ namespace WpfWebRadio.Properties {
                 this["MyPodcasts"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("CC1AD845")]
+        public string CastAppId {
+            get {
+                return ((string)(this["CastAppId"]));
+            }
+            set {
+                this["CastAppId"] = value;
+            }
+        }
     }
 }

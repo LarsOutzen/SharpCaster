@@ -27,7 +27,7 @@ namespace WpfWebRadio {
 
         private MainVm MainViewModel = new MainVm();
 
-        private const string SharpcasterAppId = "B3419EF5";
+        private string SharpcasterAppId = "ABCDEFGH";
         private Dictionary<string, ChromecastClient> MyClients = new Dictionary<string, ChromecastClient>();
         private ChromecastClient SelectedChromeCastClient = null;
 
@@ -54,6 +54,7 @@ namespace WpfWebRadio {
 
         // Create GUI Section with Station/Podcast buttons from Config
         private void ReadStationConfig() {
+            SharpcasterAppId = Properties.Settings.Default.CastAppId;
             foreach(string settingLine in Properties.Settings.Default.MyStations) {
                 string[] args = settingLine.Split('|');
                 AddRadioStation(new StationVm() { Url = args[0], Title = args[1] });
@@ -332,7 +333,8 @@ namespace WpfWebRadio {
             Dispatcher.Invoke(() => {
                 MainViewModel.StatusLine = ex.Message;
                 if(ex.InnerException != null) {
-                    System.Windows.MessageBox.Show(ex.Message + Environment.NewLine + ex.InnerException.Message);
+                    //System.Windows.MessageBox.Show(ex.Message + Environment.NewLine + ex.InnerException.Message);
+                    MainViewModel.StatusLine += ex.InnerException.Message;
                 }
             });
         }

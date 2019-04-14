@@ -21,5 +21,8 @@
   &lt;string&gt; http://falter-radio.libsyn.com/rss|Falter|img&lt;/string&gt;
 &lt;/ArrayOfString&gt;</Value>
     </Setting>
+    <Setting Name="CastAppId" Type="System.String" Scope="User">
+      <Value Profile="(Default)">CC1AD845</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

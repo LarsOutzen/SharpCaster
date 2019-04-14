@@ -28,7 +28,9 @@ namespace WpfCastAnalyzer
             InitializeComponent();
             this.SelectCastApp.Items.Add("CC32E753");   // Spotify 
             this.SelectCastApp.Items.Add("B3419EF5");   // Chromecaster
-            this.SelectCastApp.SelectedItem = "B3419EF5"; //"CC32E753";
+            this.SelectCastApp.Items.Add("CC1AD845");   // Default Media Receiver App
+            
+            this.SelectCastApp.SelectedItem = "B3419EF5"; //"CC32E753"; CC1AD845
         }
 
         private void VolumeCtrlLocal_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)

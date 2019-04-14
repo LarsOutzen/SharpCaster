@@ -139,7 +139,7 @@ namespace Sharpcaster
                                 {
                                     var response = (IMessage)JsonConvert.DeserializeObject(payload, type);
                                     await channel.OnMessageReceivedAsync(response);
-                                    TaskCompletionSourceInvoke(message, "SetResult", response);
+                                    TaskCompletionSourceInvoke(message, "SetResult", response );
                                 }
                                 catch (Exception ex)
                                 {
@@ -163,8 +163,9 @@ namespace Sharpcaster
 
         private void TaskCompletionSourceInvoke(MessageWithId message, string method, object parameter, Type[] types = null)
         {
-            if (message.HasRequestId && WaitingTasks.TryRemove(message.RequestId, out object tcs))
+            if (message.HasRequestId)
             {
+                bool removed = WaitingTasks.TryRemove(message.RequestId, out object tcs);
                 var tcsType = tcs.GetType();
                 (types == null ? tcsType.GetMethod(method) : tcsType.GetMethod(method, types)).Invoke(tcs, new object[] { parameter });
             }
