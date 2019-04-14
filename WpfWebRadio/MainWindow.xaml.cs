@@ -22,6 +22,7 @@ namespace WpfWebRadio {
 
         private const string SharpcasterAppId = "CC1AD845";
         private Dictionary<string, ChromecastClient> MyClients = new Dictionary<string, ChromecastClient>();
+        private MainVm MyViewModel = new MainVm();
         private ChromecastClient SelectedChromeCastClient = null;
 
         public MainWindow() {
@@ -54,21 +55,21 @@ namespace WpfWebRadio {
                 b.Click += StationButton_Click; ;
                 this.StationPanel.Children.Add(b);
             }
-            foreach(string settingLine in Properties.Settings.Default.MyPodcasts) {
-                string[] args = settingLine.Split('|');
-                Podcast pc = new Podcast(args);
-                Button b = new Button() {
-                    MinWidth = 60,
-                    MinHeight = 60,
-                    Margin = new Thickness(8),
-                    Content = pc.ButtonTitle,      // The Stations name
-                    DataContext = pc,        // The Stations URI
-                    IsEnabled = false,
-                    BorderThickness = new Thickness(4)
-                };
-                b.Click += PodcastButton_Click; ;
-                this.StationPanel.Children.Add(b);
-            }
+            //foreach(string settingLine in Properties.Settings.Default.MyPodcasts) {
+            //    string[] args = settingLine.Split('|');
+            //    Podcast pc = new Podcast(args);
+            //    Button b = new Button() {
+            //        MinWidth = 60,
+            //        MinHeight = 60,
+            //        Margin = new Thickness(8),
+            //        Content = pc.ButtonTitle,      // The Stations name
+            //        DataContext = pc,        // The Stations URI
+            //        IsEnabled = false,
+            //        BorderThickness = new Thickness(4)
+            //    };
+            //    b.Click += PodcastButton_Click; ;
+            //    this.StationPanel.Children.Add(b);
+            //}
         }
 
         private async Task FindChromcastsAsync() {

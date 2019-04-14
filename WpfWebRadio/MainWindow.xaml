@@ -22,10 +22,10 @@
             <WrapPanel Name="StationPanel">
                 <Button Name="StopBtn" Click="StopBtn_Click" MinWidth="60" MinHeight="60" Content="Stop" Margin="8" IsEnabled="{Binding Path=IsPlaying}"/>
             </WrapPanel>
-            <DockPanel Grid.Row="1">
+            <DockPanel Grid.Row="1" Visibility="Hidden">
                 <Button DockPanel.Dock="Left" Name="SeekBack"  Content=">--" Click="SeekBack_Click"/>
                 <Button DockPanel.Dock="Right" Name="SeekFwd"  Content="-->" Click="SeekFwd_Click"/>
-                <ProgressBar Name = "Progress" Background="Aquamarine" Value="50"/>
+                <ProgressBar Name = "Progress" Background="Aquamarine" Value="50" />
             </DockPanel>
         </Grid>
     </DockPanel>
