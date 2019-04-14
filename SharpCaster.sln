@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.26711.1
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.28803.156
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sharpcaster.Core", "Sharpcaster.Core\Sharpcaster.Core.csproj", "{CD837AE8-FBAC-4942-95AB-2019FEFC7168}"
 EndProject
@@ -22,7 +22,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WpfWebRadio", "WpfWebRadio\WpfWebRadio.csproj", "{8C7EBBA8-B7D4-43CA-8AC5-DBE1F76A3B51}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MyMvvm", "MyMvvm\MyMvvm.csproj", "{96FAC8F7-324C-4362-ACB8-68B9275CFC69}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MyMvvm", "MyMvvm\MyMvvm.csproj", "{96FAC8F7-324C-4362-ACB8-68B9275CFC69}"
+EndProject
+Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "WebRadioSetup", "WebRadioSetup\WebRadioSetup.vdproj", "{AAF920E2-4850-47DF-A6A7-5E96E39EF364}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -62,6 +64,8 @@ Global
 		{96FAC8F7-324C-4362-ACB8-68B9275CFC69}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{96FAC8F7-324C-4362-ACB8-68B9275CFC69}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{96FAC8F7-324C-4362-ACB8-68B9275CFC69}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AAF920E2-4850-47DF-A6A7-5E96E39EF364}.Debug|Any CPU.ActiveCfg = Debug
+		{AAF920E2-4850-47DF-A6A7-5E96E39EF364}.Release|Any CPU.ActiveCfg = Release
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
